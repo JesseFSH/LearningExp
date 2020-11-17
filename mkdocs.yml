@@ -1,0 +1,4 @@
+site_name: Learning Exp
+pages:
+- [index.md, Home]
+- [about.md, About]
