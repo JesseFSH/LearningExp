@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Exchange 2013 Cu补丁升级 - Learning Exp</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Exchange 2013 Cu\u8865\u4e01\u5347\u7ea7";
+    var mkdocs_page_input_path = "exchange.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Microsoft</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Exchange 2013 Cu补丁升级</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#mailbox-server">mailbox server升级步骤</a></li>
+        
+            <li><a class="toctree-l4" href="#mailbox-server_1">mailbox server升级后恢复服务步骤</a></li>
+        
+            <li><a class="toctree-l4" href="#cas-server">cas server升级以及服务恢复步骤</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Microsoft &raquo;</li>
+        
+      
+    
+    <li>Exchange 2013 Cu补丁升级</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>升级主要分为mailbox server和cas server，其中mailbox server即DAG members，升级过程中参考了以下官方文档：<br />
+<a href="https://docs.microsoft.com/en-us/exchange/anti-virus-software-in-the-operating-system-on-exchange-servers-exchange-2013-help">Anti-Virus Software in the Operating System on Exchange Servers</a><br />
+<a href="https://docs.microsoft.com/en-us/exchange/exchange-admin-center-in-exchange-2013-exchange-2013-help">Exchange admin center in Exchange 2013</a><br />
+<a href="https://docs.microsoft.com/en-us/exchange/managing-database-availability-groups-exchange-2013-help">Managing database availability groups</a>  </p>
+<p>本次升级了解到了以下几点实践经验：  </p>
+<ul>
+<li>建议exchange所有节点之间端口全开</li>
+<li>建议打开ipv6（经观察节点之间的心跳联系会以ipv6地址进行）</li>
+<li>升级Cu补丁时，建议<code>cd</code>到所在目录以<code>./&lt;patch_name&gt;</code>运行，而非直接双击运行</li>
+<li>
+<p>exchange 2013环境中，只有cas角色才能访问owa和ecp，即<code>https://&lt;CasServerName&gt;/owa</code>和<code>https://&lt;CasServerName&gt;/ecp</code>  </p>
+</li>
+<li>
+<p>对于exchange server上安装的杀毒软件，需要对exchange安装目录和db所在的目录添加例外。按照官方文档，还需要对exchange进程添加例外，但是进程工作时需要访问的文件已经被添加，所以进程级别没有做了。</p>
+</li>
+</ul>
+<p>下面开始升级步骤。</p>
+<h2 id="mailbox-server">mailbox server升级步骤</h2>
+<ol>
+<li>
+<p>传输队列状态设置为drain<code>Set-ServerComponentState &lt;ServerName&gt; -Component HubTransport -State Draining -Requester Maintenance</code></p>
+</li>
+<li>
+<p>传输队列开始drain<code>Restart-Service MSExchangeTransport</code></p>
+</li>
+<li>
+<p>将server服务切换到dag内其他服务器<code>Redirect-Message-Server &lt;ServerName1&gt; -Target &lt;ServerName2&gt;</code></p>
+</li>
+<li>
+<p>暂停该节点<code>Suspend-ClusterNode -Name &lt;ServerName&gt;</code></p>
+</li>
+<li>
+<p>把该台server上的active db迁移到其他server上<code>Set-MailboxServer &lt;ServerName&gt; -DatabaseCopyActivationDisabledAndMoveNow $True</code></p>
+</li>
+<li>
+<p>避免在该台server上自动active db<code>Set-MailboxServer &lt;ServerName&gt; -DatabaseCopyAutoActivationPolicy Blocked</code></p>
+</li>
+<li>
+<p>把服务器置为维护模式<code>Set-ServerComponentState &lt;ServerName&gt; -Component ServerWideOffline -State Inactive -Requester Maintenance</code></p>
+</li>
+<li>
+<p>安装Cu<code>Setup.exe /m:upgrade /IAcceptExchangeServerLicenseTerms</code></p>
+</li>
+</ol>
+<p>附上验证server已处于维护模式命令：<br />
+To verify the server has been placed into maintenance mode, run <code>Get-ServerComponentState &lt;ServerName&gt; | ft Component,State -Autosize</code><br />
+To verify the server is not hosting any active database copies, run <code>Get-MailboxServer &lt;ServerName&gt; | ft DatabaseCopy* -Autosize</code><br />
+To verify that the node is paused, run <code>Get-ClusterNode &lt;ServerName&gt; | fl</code><br />
+To verify that all transport queues have been drained, run <code>Get-Queue</code>  </p>
+<h2 id="mailbox-server_1">mailbox server升级后恢复服务步骤</h2>
+<ol>
+<li>
+<p>ServerWideOffline组件恢复<code>Set-ServerComponentState &lt;ServerName&gt; -Component ServerWideOffline -State Active -Requester Maintenance</code>  </p>
+</li>
+<li>
+<p>集群内恢复 <code>Resume-ClusterNode &lt;ServerName&gt;</code>  </p>
+</li>
+<li>
+<p>server上可以active db<code>Set-MailboxServer &lt;ServerName&gt; -DatabaseCopyActivationDisabledAndMoveNow $False</code></p>
+</li>
+<li>
+<p>server上可以active db<code>Set-MailboxServer &lt;ServerName&gt; -DatabaseCopyAutoActivationPolicy Unrestricted</code></p>
+</li>
+<li>
+<p>传输服务开启<code>Set-ServerComponentState &lt;ServerName&gt; -Component HubTransport -State Active -Requester Maintenance</code></p>
+</li>
+<li>
+<p>重启传输服务<code>Restart-Service MSExchangeTransport</code></p>
+</li>
+</ol>
+<h2 id="cas-server">cas server升级以及服务恢复步骤</h2>
+<p>再此不赘述，区别在于运行Cu之前在windows nlb内block掉server ip（具体情况视架构而定）</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
