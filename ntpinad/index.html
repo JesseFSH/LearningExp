@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>AD域内的时间同步 - Learning Exp</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "AD\u57df\u5185\u7684\u65f6\u95f4\u540c\u6b65";
+    var mkdocs_page_input_path = "ntpinad.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Microsoft</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">AD域内的时间同步</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#ad">AD时间同步架构</a></li>
+        
+            <li><a class="toctree-l4" href="#ntp">如何确认ntp配置</a></li>
+        
+            <li><a class="toctree-l4" href="#stratum">Stratum模型（简单了解一下）</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Microsoft &raquo;</li>
+        
+      
+    
+    <li>AD域内的时间同步</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>闲来无事研究了一下Active Directory中的时间同步机制和一些简单配置，参考了以下文档：<br />
+<a href="https://social.technet.microsoft.com/wiki/contents/articles/50924.active-directory-time-synchronization.aspx">Active Directory: Time Synchronization</a><br />
+<a href="https://docs.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings">Windows Time service tools and settings</a><br />
+<a href="http://manuals.spectracom.com/SS/Content/_Global/Topics/NTP/NTP_Stratums.htm">Description of The NTP Stratum Model</a>  </p>
+<h2 id="ad">AD时间同步架构</h2>
+<p>在AD域中，承担时间服务器一定是根域中拥有PDC Emulator FSMO角色的那一台域控，个人觉得就是主域控。从下面的架构图来看，域内所有其他机器，包括客户端、服务器以及除了主域控的其他域控都会直接或间接地从主域控来同步时间，而主域控上设置从外部时间服务器同步时间。
+<img alt="TimeSyncAD" src="http://social.technet.microsoft.com/wiki/cfs-file.ashx/__key/communityserver-wikis-components-files/00-00-00-00-05/8037.Capture.PNG" /></p>
+<h2 id="ntp">如何确认ntp配置</h2>
+<p>看注册表键值
+HKLM\System\CurrentControlSet\Services\W32Time\Parameters\Type，根据Type的键值来判断该设备的时间同步机制。</p>
+<table>
+<thead>
+<tr>
+<th>键值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NoSync</td>
+<td>顾名思义，不做同步</td>
+</tr>
+<tr>
+<td>NTP</td>
+<td>从同级下的NtpServer键值做同步</td>
+</tr>
+<tr>
+<td>NT5DS</td>
+<td>根据上面架构图从domain的上级角色做同步</td>
+</tr>
+<tr>
+<td>AllSync</td>
+<td>从任意可用的时间源做同步</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="regedit" src="http://social.technet.microsoft.com/wiki/cfs-filesystemfile.ashx/__key/communityserver-wikis-components-files/00-00-00-00-05/7140.Capture.PNG" /></p>
+<h2 id="stratum">Stratum模型（简单了解一下）</h2>
+<p>Stratum模型是用来衡量计算机时间精准程度的，网络上最精准的时间校准源被定义为Stratum 0，例如硬件时钟、GPS、北斗授时服务等等。这些Stratum 0时间源，会同步时间到Stratum 1的时间源，比如ntp.aliyun.com。以此类推，Stratum 2会从Stratum 1同步时间，例如企业内部的ntp服务器就是Stratum 2。因此level越低，越接近0，时间越精准。</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../exchange/" class="btn btn-neutral" title="Exchange 2013 Cu补丁升级"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../exchange/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
