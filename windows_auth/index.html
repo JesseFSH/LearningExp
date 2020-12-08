@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Windows认证 - Learning Exp</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Windows\u8ba4\u8bc1";
+    var mkdocs_page_input_path = "windows_auth.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Microsoft</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../ntpinad/">AD域内的时间同步</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Windows认证</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#windows">Windows本地认证</a></li>
+        
+            <li><a class="toctree-l4" href="#windows_1">Windows网络认证</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Microsoft &raquo;</li>
+        
+      
+    
+    <li>Windows认证</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>最近做了很多安全整改的事情，包括禁用SMBv1协议，开启SMB协议传输加密，开启NTLMv2认证等等，也尝试做了RHEL集成Active Directory来实现统一账户管理，发现自己在Windows认证方面存在大块知识盲区，趁着还在兴头上，赶紧研究一下。</p>
+<p>首先科普一个知识点</p>
+<p>为什么需要采用hash做加密或签名算法，它有什么特点？</p>
+<ol>
+<li>
+<p>不可逆性。当你得到一个值x的hash值的时候，你没有办法倒推得到值x。</p>
+</li>
+<li>
+<p>无冲突性。当你知道一个值x，你无法求出一个y，使得x与y的hash值相同。</p>
+</li>
+</ol>
+<p>*实际上这两条特性在数学上是不成立的，一个函数必然是可逆的，另外由于hash函数的值域有限，理论上存在无穷多个不同的值，它们的hash值相同。比较有名的hash算法MD5和SHA实现的是，求逆和求冲突在计算上不可能，也就是正向计算很容易，而反向计算即使穷尽人类所有的计算资源都做不到。</p>
+<h2 id="windows">Windows本地认证</h2>
+<p>Windows以明文形式存储用户密码么？答案是否定的，Windows将用户的明文密码经过NTLM Hash算法加密后，存储在<code>%SystemRoot%\System32\config\sam</code>文件中。当用户登录时，将用户输入的明文密码也用NTLM Hash算法加密，得到的Hash值与sam中的值进行对比。如果结果相同，则认证通过，成功登录。反之，登录失败。本地登录时，两个进程参与工作winlogon和lsass。简单来说就是winlogon接收用户输入账号密码，把用户密码交给lsass进程做密码比对。
+<img alt="local_auth" src="../img/local_auth.jpg" /></p>
+<h2 id="windows_1">Windows网络认证</h2>
+<p>假设主机A要访问主机B共享的资源，在Windows环境下通常是通过SMB协议共享文件，那其中认证的工作是怎么完成的呢？如何判断主机A提供的账户是否有权限访问主机B呢？是不是和Windows本地认证一样，通过网络传送主机A的share_user密码NTLM Hash值，并和主机B上的share_user NTLM Hash值做比对呢？
+答案肯定没这么简单。Windows的网络认证流程主要分为协商、质询Challenge/Response、验证三步骤。</p>
+<h5 id="_2">协商</h5>
+<p>客户端和服务端确认使用什么认证协议，是NTLMv1还是v2？(先前做SMBv1 disable工作的时候，了解到在Windows server 2008 R2以后，默认策略为Send NTLMv2 Response Only)，在客户端与服务端协商确定认证协议版本后，开始下一步工作。</p>
+<h5 id="challengeresponse">质询Challenge/Response</h5>
+<p>在服务端收到客户端的访问请求后，会生成一个随机数，称为Challenge，随后服务端会使用客户端请求的登录名对应的NTLM Hash值（即登录密码进行NTLM Hash算法加密后的值）对Challenge进行加密，得到的值称为Net NTLM Hash，服务端会把Net NTLM Hash存在内存，再将Challenge发送给客户端。
+客户端收到Challenge后，同样使用登录名对应的NTLM Hash值对Challenge进行加密，得到的值称为Response，随后将Response发送给服务器。</p>
+<h5 id="_3">验证</h5>
+<p>服务端收到客户端的Response后，对比Net NTLM Hash和Response是否相等，如果相等，则认证通过。</p>
+<p>那NTLM v1和NTLM v2的区别在哪里呢？</p>
+<ul>
+<li>Challenge，v1的Challenge有8位，而v2的Challenge是16位。</li>
+<li>对Challenge加密的算法不同，v1算法为DES，v2算法是HMAC-MD5。</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../ntpinad/" class="btn btn-neutral" title="AD域内的时间同步"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../ntpinad/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
