@@ -76,7 +76,9 @@
         
             <li><a class="toctree-l4" href="#windows">Windows本地认证</a></li>
         
-            <li><a class="toctree-l4" href="#windows_1">Windows网络认证</a></li>
+            <li><a class="toctree-l4" href="#windowsntlm">Windows网络认证——NTLM认证</a></li>
+        
+            <li><a class="toctree-l4" href="#windowskerberos">Windows网络认证——Kerberos认证</a></li>
         
         </ul>
     
@@ -123,7 +125,10 @@
             <div class="section">
               
                 <h1 id="_1">概述</h1>
-<p>最近做了很多安全整改的事情，包括禁用SMBv1协议，开启SMB协议传输加密，开启NTLMv2认证等等，也尝试做了RHEL集成Active Directory来实现统一账户管理，发现自己在Windows认证方面存在大块知识盲区，趁着还在兴头上，赶紧研究一下。</p>
+<p>最近做了很多安全整改的事情，包括禁用SMBv1协议，开启SMB协议传输加密，开启NTLMv2认证等等，也尝试做了RHEL集成Active Directory来实现统一账户管理，发现自己在Windows认证方面存在大块知识盲区，趁着还在兴头上，赶紧研究一下。参考文档：<br />
+<a href="https://docs.microsoft.com/zh-cn/windows/win32/secauthn/microsoft-ntlm?redirectedfrom=MSDN">Microsoft NTLM</a><br />
+<a href="https://docs.microsoft.com/zh-cn/windows/win32/secauthn/microsoft-negotiate">Microsoft Negotiate</a><br />
+<a href="https://docs.microsoft.com/zh-cn/windows/win32/secauthn/microsoft-kerberos">Microsoft Kerberos</a>  </p>
 <p>首先科普一个知识点</p>
 <p>为什么需要采用hash做加密或签名算法，它有什么特点？</p>
 <ol>
@@ -138,21 +143,24 @@
 <h2 id="windows">Windows本地认证</h2>
 <p>Windows以明文形式存储用户密码么？答案是否定的，Windows将用户的明文密码经过NTLM Hash算法加密后，存储在<code>%SystemRoot%\System32\config\sam</code>文件中。当用户登录时，将用户输入的明文密码也用NTLM Hash算法加密，得到的Hash值与sam中的值进行对比。如果结果相同，则认证通过，成功登录。反之，登录失败。本地登录时，两个进程参与工作winlogon和lsass。简单来说就是winlogon接收用户输入账号密码，把用户密码交给lsass进程做密码比对。
 <img alt="local_auth" src="../img/local_auth.jpg" /></p>
-<h2 id="windows_1">Windows网络认证</h2>
-<p>假设主机A要访问主机B共享的资源，在Windows环境下通常是通过SMB协议共享文件，那其中认证的工作是怎么完成的呢？如何判断主机A提供的账户是否有权限访问主机B呢？是不是和Windows本地认证一样，通过网络传送主机A的share_user密码NTLM Hash值，并和主机B上的share_user NTLM Hash值做比对呢？
-答案肯定没这么简单。Windows的网络认证流程主要分为协商、质询Challenge/Response、验证三步骤。</p>
-<h5 id="_2">协商</h5>
-<p>客户端和服务端确认使用什么认证协议，是NTLMv1还是v2？(先前做SMBv1 disable工作的时候，了解到在Windows server 2008 R2以后，默认策略为Send NTLMv2 Response Only)，在客户端与服务端协商确定认证协议版本后，开始下一步工作。</p>
-<h5 id="challengeresponse">质询Challenge/Response</h5>
-<p>在服务端收到客户端的访问请求后，会生成一个随机数，称为Challenge，随后服务端会使用客户端请求的登录名对应的NTLM Hash值（即登录密码进行NTLM Hash算法加密后的值）对Challenge进行加密，得到的值称为Net NTLM Hash，服务端会把Net NTLM Hash存在内存，再将Challenge发送给客户端。
-客户端收到Challenge后，同样使用登录名对应的NTLM Hash值对Challenge进行加密，得到的值称为Response，随后将Response发送给服务器。</p>
-<h5 id="_3">验证</h5>
-<p>服务端收到客户端的Response后，对比Net NTLM Hash和Response是否相等，如果相等，则认证通过。</p>
-<p>那NTLM v1和NTLM v2的区别在哪里呢？</p>
+<h2 id="windowsntlm">Windows网络认证——NTLM认证</h2>
+<p>Windows网络认证主要分为NTML认证和Kerberos认证，先讲一下NTML认证。认证流程主要分为协商、质询Challenge/Response、验证三步骤。在协商阶段，客户端和服务端确认使用什么认证协议，是使用Kerberos还是NTLMv1或者NTLMv2？微软官方是推荐通过协商来选择更安全的认证协议的。如果选择了NTLM认证，则进入下一步质询Challenge/Response。NTLM分为交互式和非交互式两种类型，交互式即用户客户端登录，只有客户端和域控参与此认证过程。非交互式指客户端要去连接某台服务器并访问相关服务，这种情况下会有客户端、服务端和域控三方参与认证过程。下面简述一下非交互式的认证步骤。其中第一步提供用户名和密码仅存在于交互式认证。</p>
+<p><img alt="ad_auth" src="../img/NTML_auth.png" /></p>
+<ol>
+<li>(仅限交互式认证)用户登录时输入的user name、password和domain name，然后Client端计算password的hash值并保存在本地并且丢弃真正的password</li>
+<li>客户端将user name的明文发送给服务端</li>
+<li>服务端生成一个随机数，叫做challenge，传输给client</li>
+<li>client收到challenge以后，将challenge用password hash加密，得到的结果叫做response，然后将response传给server</li>
+<li>server端将以下三份内容发送给DC，user name、challenge、response。</li>
+<li>DC在收到user name，response，challenge以后，根据user name在account database中找到其对应的password hash，然后用这个password hash加密challenge</li>
+<li>DC将response与上一步加密后的challenge进行比较，如果相同则NTLM验证成功。  </li>
+</ol>
+<p>最后再提一下NTLM v1和NTLM v2的区别吧  </p>
 <ul>
-<li>Challenge，v1的Challenge有8位，而v2的Challenge是16位。</li>
+<li>Challenge，v1的Challenge有8位，而v2的Challenge是16位。  </li>
 <li>对Challenge加密的算法不同，v1算法为DES，v2算法是HMAC-MD5。</li>
 </ul>
+<h2 id="windowskerberos">Windows网络认证——Kerberos认证</h2>
               
             </div>
           </div>
