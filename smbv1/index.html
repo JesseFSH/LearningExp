@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>AD域内的时间同步 - Learning Exp</title>
+  <title>Disable SMBv1引发事件 - Learning Exp</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,8 +17,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "AD\u57df\u5185\u7684\u65f6\u95f4\u540c\u6b65";
-    var mkdocs_page_input_path = "ntpinad.md";
+    var mkdocs_page_name = "Disable SMBv1\u5f15\u53d1\u4e8b\u4ef6";
+    var mkdocs_page_input_path = "smbv1.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -61,25 +61,9 @@
                     
     <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
                 </li>
-                <li class=" current">
+                <li class="">
                     
-    <a class="current" href="./">AD域内的时间同步</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l3"><a href="#_1">概述</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l4" href="#ad">AD时间同步架构</a></li>
-        
-            <li><a class="toctree-l4" href="#ntp">如何确认ntp配置</a></li>
-        
-            <li><a class="toctree-l4" href="#stratum">Stratum模型（简单了解一下）</a></li>
-        
-        </ul>
-    
-
-    </ul>
+    <a class="" href="../ntpinad/">AD域内的时间同步</a>
                 </li>
                 <li class="">
                     
@@ -92,9 +76,21 @@
 		
     <span class="caption-text">Case</span>
     <ul class="subnav">
-                <li class="">
+                <li class=" current">
                     
-    <a class="" href="../smbv1/">Disable SMBv1引发事件</a>
+    <a class="current" href="./">Disable SMBv1引发事件</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#20201217-case">2020.12.17 case过程</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#case">case复盘</a></li>
+        
+        </ul>
+    
+
+    </ul>
                 </li>
     </ul>
 	    </li>
@@ -121,11 +117,11 @@
     
       
         
-          <li>Microsoft &raquo;</li>
+          <li>Case &raquo;</li>
         
       
     
-    <li>AD域内的时间同步</li>
+    <li>Disable SMBv1引发事件</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -135,46 +131,20 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="_1">概述</h1>
-<p>闲来无事研究了一下Active Directory中的时间同步机制和一些简单配置，参考了以下文档：<br />
-<a href="https://social.technet.microsoft.com/wiki/contents/articles/50924.active-directory-time-synchronization.aspx">Active Directory: Time Synchronization</a><br />
-<a href="https://docs.microsoft.com/en-us/windows-server/networking/windows-time-service/windows-time-service-tools-and-settings">Windows Time service tools and settings</a><br />
-<a href="http://manuals.spectracom.com/SS/Content/_Global/Topics/NTP/NTP_Stratums.htm">Description of The NTP Stratum Model</a>  </p>
-<h2 id="ad">AD时间同步架构</h2>
-<p>在AD域中，承担时间服务器一定是根域中拥有PDC Emulator FSMO角色的那一台域控，个人觉得就是主域控。从下面的架构图来看，域内所有其他机器，包括客户端、服务器以及除了主域控的其他域控都会直接或间接地从主域控来同步时间，而主域控上设置从外部时间服务器同步时间。
-<img alt="TimeSyncAD" src="http://social.technet.microsoft.com/wiki/cfs-file.ashx/__key/communityserver-wikis-components-files/00-00-00-00-05/8037.Capture.PNG" /></p>
-<h2 id="ntp">如何确认ntp配置</h2>
-<p>看注册表键值
-HKLM\System\CurrentControlSet\Services\W32Time\Parameters\Type，根据Type的键值来判断该设备的时间同步机制。</p>
-<table>
-<thead>
-<tr>
-<th>键值</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>NoSync</td>
-<td>顾名思义，不做同步</td>
-</tr>
-<tr>
-<td>NTP</td>
-<td>从同级下的NtpServer键值做同步</td>
-</tr>
-<tr>
-<td>NT5DS</td>
-<td>根据上面架构图从domain的上级角色做同步</td>
-</tr>
-<tr>
-<td>AllSync</td>
-<td>从任意可用的时间源做同步</td>
-</tr>
-</tbody>
-</table>
-<p><img alt="regedit" src="http://social.technet.microsoft.com/wiki/cfs-filesystemfile.ashx/__key/communityserver-wikis-components-files/00-00-00-00-05/7140.Capture.PNG" /></p>
-<h2 id="stratum">Stratum模型（简单了解一下）</h2>
-<p>Stratum模型是用来衡量计算机时间精准程度的，网络上最精准的时间校准源被定义为Stratum 0，例如硬件时钟、GPS、北斗授时服务等等。这些Stratum 0时间源，会同步时间到Stratum 1的时间源，比如ntp.aliyun.com。以此类推，Stratum 2会从Stratum 1同步时间，例如企业内部的ntp服务器就是Stratum 2。因此level越低，越接近0，时间越精准。</p>
+                <h1 id="20201217-case">2020.12.17 case过程</h1>
+<p>其实早在两周前的周末已经把disable smbv1的组策略下发至server ou下，但是今天发现原来domain controller是单独存在一个ou下的，遂把disable smbv1策略同样下发至dc ou下。并逐台对server做gpupdate /force操作。完成操作五分钟后，有用户反映无法登录OA和共享文件目录。手动set-smbserverconfiguration -enablesmbv1protocal $true后故障消失。  </p>
+<h2 id="case">case复盘</h2>
+<p>在对架构不完全了解的情况下对AD贸然变更是相当危险的！
+本次事件分为两部分：</p>
+<ul>
+<li>
+<p>首先是共享目录无法访问。架构采用NAS存储映射至Windows文件目录，再通过共享的方式给用户访问。怀疑NAS到DC之间仅支持smbv1。</p>
+</li>
+<li>
+<p>OA无法访问。Java代码层通过一个叫jespa的收费插件集成AD认证的功能。在jespa1.2.0的release note中，提到了1.2.0版本中采用TCP传输协议来替代smbv1协议，如果采用1.2.0以前的版本，当禁用smbv1协议时，会出现报错，具体可以查看链接---&gt;
+<a href="http://www.ioplex.com/jespa_release.html">Jespa Release Notes</a></p>
+</li>
+</ul>
               
             </div>
           </div>
@@ -182,10 +152,8 @@ HKLM\System\CurrentControlSet\Services\W32Time\Parameters\Type，根据Type的�
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../windows_auth/" class="btn btn-neutral float-right" title="Windows认证">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href="../exchange/" class="btn btn-neutral" title="Exchange 2013 Cu补丁升级"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../windows_auth/" class="btn btn-neutral" title="Windows认证"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -211,10 +179,8 @@ HKLM\System\CurrentControlSet\Services\W32Time\Parameters\Type，根据Type的�
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../exchange/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../windows_auth/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-      
-        <span style="margin-left: 15px"><a href="../windows_auth/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
