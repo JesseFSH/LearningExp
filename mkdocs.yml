@@ -1,0 +1,18 @@
+#cd到所在目录mkdocs gh-deploy发布到github
+#本地使用mkdocs serve，访问http://127.0.0.1:8000/
+#已发布到https://jessefsh.github.io/LearningExp、
+site_name: Learning Exp
+nav:
+    - Home: index.md
+    - Microsoft:
+      - Exchange 2013 Cu补丁升级: exchange.md
+      - AD域内的时间同步: ntpinad.md
+      - Windows认证: windows_auth.md
+    - Linux:
+      - DNS基础: dns.md
+    - Vmware:
+      - python vmware sdk实现克隆虚机: vmware_api.md
+    - Case: 
+      - Disable SMBv1引发事件: smbv1.md
+    #- About: about.md
+theme: readthedocs

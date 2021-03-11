@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>VMware Python SDK实现克隆虚机 - Learning Exp</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "VMware Python SDK\u5b9e\u73b0\u514b\u9686\u865a\u673a";
+    var mkdocs_page_input_path = "vmware_api.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Microsoft</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../ntpinad/">AD域内的时间同步</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../windows_auth/">Windows认证</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Linux</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../dns/">DNS基础</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">VMware</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">VMware Python SDK实现克隆虚机</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#vmware-vsphere-python-sdk">VMware vSphere Python SDK心得体会</a></li>
+        
+            <li><a class="toctree-l4" href="#_2">实现并发</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Case</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../smbv1/">Disable SMBv1引发事件</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>VMware &raquo;</li>
+        
+      
+    
+    <li>VMware Python SDK实现克隆虚机</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>之前接触过ansible的vmware_guest module，并且通过调用这个模块实现了批量从模板克隆虚拟机（包括Linux和Windows），后来萌生了能否用Python重构这个功能的想法，于是2021年2月中旬着手开始，到2021年3月中旬历时一个月，已经完成从文件读取虚拟机配置，并克隆虚拟机的功能，同样包括了Linux和Windows。主要参考文档如下：<br />
+<a href="https://vdc-download.vmware.com/vmwb-repository/dcr-public/3325c370-b58c-4799-99ff-58ae3baac1bd/45789cc5-aba1-48bc-a320-5e35142b50af/doc/left-pane.html">VMware Python SDK api文档，版本为vCenter6.7</a><br />
+<a href="https://chriskiehl.com/article/parallelism-in-one-line">Parallelism in One Line with Python，国外大神针对Python并发编程的一篇文章</a><br />
+<a href="https://github.com/vmware/pyvmomi">pyvmomi on github</a><br />
+<a href="https://pypi.org/project/pyvmomi/">pyvmomi on pypi.org</a><br />
+<a href="https://docs.python.org/3/library/atexit.html">atexit模块文档，用来做程序退出时的处理，在这个case中是做vcenter账号注销退出的</a>  </p>
+<h2 id="vmware-vsphere-python-sdk">VMware vSphere Python SDK心得体会</h2>
+<ul>
+<li>VMware vSphere Python SDK可以通过<code>pip install pyvmomi</code>安装，如果无法直连公网，可以通过github或者python官网下载并离线安装，进行api调用开发需要import pyVmomi和pyVim两个包。  </li>
+<li>对vmware进行任何操作之前，都需要进行调用登录连接到vcetner，调用pyVim.connect内SmartConnectNoSSL方法，返回一个SmartConnect方法，SmartConnect再返回一个Connect方法，Connect方法最后返回一个service instance对象（si）。si.content直接获得属性值 和 content = si.RetrieveContent()通过RetrieveContent()方法获得的值是相同的。</li>
+<li>得到content后，通过一系列的api method拿到克隆机器的所需参数，最后CloneVM_Task方法实现克隆机器。  </li>
+</ul>
+<h2 id="_2">实现并发</h2>
+<p>在api文档上花了一段时间后，对api文档渐渐熟悉起来，于是顺利完成了克隆虚机的功能。但是ansible装机默认并发是5，即可以支持同时5台虚机的安装，但是自己的python脚本通过for循环实现的克隆没有并发，由于添加了wait_for_task函数，函数会等到安装任务结束后返回任务执行结果，因此for循环的实现效果就是单次安装一台虚拟机，等到安装结束后才能开始下一台的安装。于是决定实现和ansible同样效果的想法。<br />
+据我目前所知，python中有三个包可以实现并发功能，分别是multiprocessing.Pool, multiprocessing.ThreadPool, threading,先尝试了一下multiprocessing.ThreadPool，实现方式很简单<br />
+<code>pool = ThreadPool()</code><br />
+<code>pool.map(function, iterable_var)</code><br />
+<code>pool.close()</code><br />
+<code>pool.join()</code><br />
+先定义一个线程池，随后调用map方法，第一个变量是线程需要执行的函数方法，第二个变量是一个可迭代的变量。map方法会将iterable_var中的每个值丢进function中执行。这种方法我只写了个demo，并没有实际运用到克隆机器的案例中。<br />
+ThreadPool方法实现很简单，符合python代码简洁的初衷，threading有点繁琐，不仅需要写一个线程类，还需要维护queue队列（你需要把虚拟机的参数从txt文件维护到queue中，再让线程从queue读取数据来克隆虚拟机），出于没有写过并发编程，最后还是采用了threading模块实现并发。</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../smbv1/" class="btn btn-neutral float-right" title="Disable SMBv1引发事件">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../dns/" class="btn btn-neutral" title="DNS基础"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../dns/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../smbv1/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
