@@ -176,7 +176,10 @@
 <code>pool.close()</code><br />
 <code>pool.join()</code><br />
 先定义一个线程池，随后调用map方法，第一个变量是线程需要执行的函数方法，第二个变量是一个可迭代的变量。map方法会将iterable_var中的每个值丢进function中执行。这种方法我只写了个demo，并没有实际运用到克隆机器的案例中。<br />
-ThreadPool方法实现很简单，符合python代码简洁的初衷，threading有点繁琐，不仅需要写一个线程类，还需要维护queue队列（你需要把虚拟机的参数从txt文件维护到queue中，再让线程从queue读取数据来克隆虚拟机），出于没有写过并发编程，最后还是采用了threading模块实现并发。</p>
+ThreadPool方法实现很简单，符合python代码简洁的初衷，threading有点繁琐，不仅需要写一个线程类，还需要维护queue队列（你需要把虚拟机的参数从txt文件维护到queue中，再让线程从queue读取数据来克隆虚拟机），出于没有写过并发编程，最后还是采用了threading模块实现并发。threading模块实现并发功能的核心是这样的，从Thread类继承，子类中重写run方法，run方法内就是线程需要干的活。<br />
+<code>class sub_class(threading.Thread)</code> #声明子类<br />
+<code>worker = sub_class(args)</code> #实例化子类，即线程<br />
+<code>worker.start()</code> #线程运行，具体工作定义在run方法中  </p>
               
             </div>
           </div>
