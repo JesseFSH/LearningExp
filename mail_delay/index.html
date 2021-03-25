@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Disable SMBv1引发事件 - Learning Exp</title>
+  <title>内部邮件delay事件 - Learning Exp</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,8 +17,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Disable SMBv1\u5f15\u53d1\u4e8b\u4ef6";
-    var mkdocs_page_input_path = "smbv1.md";
+    var mkdocs_page_name = "\u5185\u90e8\u90ae\u4ef6delay\u4e8b\u4ef6";
+    var mkdocs_page_input_path = "mail_delay.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -98,25 +98,25 @@
 		
     <span class="caption-text">Case</span>
     <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../smbv1/">Disable SMBv1引发事件</a>
+                </li>
                 <li class=" current">
                     
-    <a class="current" href="./">Disable SMBv1引发事件</a>
+    <a class="current" href="./">内部邮件delay事件</a>
     <ul class="subnav">
             
-    <li class="toctree-l3"><a href="#20201217-case">2020.12.17 case过程</a></li>
+    <li class="toctree-l3"><a href="#20210325-case">2021.03.25 case现象</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#case">case复盘</a></li>
+            <li><a class="toctree-l4" href="#_1">排查思路</a></li>
         
         </ul>
     
 
     </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../mail_delay/">内部邮件delay事件</a>
                 </li>
     </ul>
 	    </li>
@@ -147,7 +147,7 @@
         
       
     
-    <li>Disable SMBv1引发事件</li>
+    <li>内部邮件delay事件</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -157,20 +157,17 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="20201217-case">2020.12.17 case过程</h1>
-<p>其实早在两周前的周末已经把disable smbv1的组策略下发至server ou下，但是今天发现原来domain controller是单独存在一个ou下的，遂把disable smbv1策略同样下发至dc ou下。并逐台对server做gpupdate /force操作。完成操作五分钟后，有用户反映无法登录OA和共享文件目录。手动set-smbserverconfiguration -enablesmbv1protocal $true后故障消失。  </p>
-<h2 id="case">case复盘</h2>
-<p>在对架构不完全了解的情况下对AD贸然变更是相当危险的！
-本次事件分为两部分：</p>
-<ul>
-<li>
-<p>首先是共享目录无法访问。架构采用NAS存储映射至Windows文件目录，再通过共享的方式给用户访问。怀疑NAS到DC之间仅支持smbv1。</p>
-</li>
-<li>
-<p>OA无法访问。Java代码层通过一个叫jespa的收费插件集成AD认证的功能。在jespa1.2.0的release note中，提到了1.2.0版本中采用TCP传输协议来替代smbv1协议，如果采用1.2.0以前的版本，当禁用smbv1协议时，会出现报错，具体可以查看链接---&gt;
-<a href="http://www.ioplex.com/jespa_release.html">Jespa Release Notes</a></p>
-</li>
-</ul>
+                <h1 id="20210325-case">2021.03.25 case现象</h1>
+<p>11:00陆续收到用户反馈无法接收某一发送给群组的邮件，该邮件10:02发出，但是部分用户无延迟正常接收。且其它内部邮件收发正常，无延迟。</p>
+<h2 id="_1">排查思路</h2>
+<ol>
+<li>查看每台exhcange服务器是否正常，检查eventlog，正常。</li>
+<li>Get-MailboxDatabaseCopyStatus检查所有数据库挂载情况，正常。</li>
+<li>Get-Queue检查邮件发送队列是否存在堆积，正常。</li>
+<li>Get-MessageTrackingLog检查相关邮件发送日志，正常。</li>
+<li>https://mha.azurewebsites.net/ 通过这个在线工具分析邮件头发现有一跳从内部mailbox到mailbox delay了67分钟。</li>
+<li>最后发现与邮件群组发送的审批流相关，通过Get-MessageTrackingLog -sender 审批人邮箱地址 找到了一条审批通过的记录，是由审批人邮箱地址发送至MSExchApprovalxxxxxxxxxx@domainname.com的一封审批邮件，邮件发送的时间戳和用户发送邮件时间+delay时间完全吻合，故判断为审批人未及时审批导致的邮件delay。至于有部分用户无延迟正常接收邮件，是因为这部分用户不在需要审批的组内。</li>
+</ol>
               
             </div>
           </div>
@@ -178,10 +175,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../mail_delay/" class="btn btn-neutral float-right" title="内部邮件delay事件">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href="../vmware_api/" class="btn btn-neutral" title="VMware Python SDK实现克隆虚机"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../smbv1/" class="btn btn-neutral" title="Disable SMBv1引发事件"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -207,10 +202,8 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../vmware_api/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../smbv1/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-      
-        <span style="margin-left: 15px"><a href="../mail_delay/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
