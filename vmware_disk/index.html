@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>VMware Python SDK实现克隆虚机 - Learning Exp</title>
+  <title>精简置备和厚置备的区别 - Learning Exp</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,8 +17,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "VMware Python SDK\u5b9e\u73b0\u514b\u9686\u865a\u673a";
-    var mkdocs_page_input_path = "vmware_api.md";
+    var mkdocs_page_name = "\u7cbe\u7b80\u7f6e\u5907\u548c\u539a\u7f6e\u5907\u7684\u533a\u522b";
+    var mkdocs_page_input_path = "vmware_disk.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -87,27 +87,27 @@
 		
     <span class="caption-text">VMware</span>
     <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../vmware_api/">VMware Python SDK实现克隆虚机</a>
+                </li>
                 <li class=" current">
                     
-    <a class="current" href="./">VMware Python SDK实现克隆虚机</a>
+    <a class="current" href="./">精简置备和厚置备的区别</a>
     <ul class="subnav">
             
     <li class="toctree-l3"><a href="#_1">概述</a></li>
     
         <ul>
         
-            <li><a class="toctree-l4" href="#vmware-vsphere-python-sdk">VMware vSphere Python SDK心得体会</a></li>
+            <li><a class="toctree-l4" href="#_2">厚置备</a></li>
         
-            <li><a class="toctree-l4" href="#_2">实现并发</a></li>
+            <li><a class="toctree-l4" href="#_3">精简置备</a></li>
         
         </ul>
     
 
     </ul>
-                </li>
-                <li class="">
-                    
-    <a class="" href="../vmware_disk/">精简置备和厚置备的区别</a>
                 </li>
     </ul>
 	    </li>
@@ -153,7 +153,7 @@
         
       
     
-    <li>VMware Python SDK实现克隆虚机</li>
+    <li>精简置备和厚置备的区别</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -164,30 +164,26 @@
             <div class="section">
               
                 <h1 id="_1">概述</h1>
-<p>之前接触过ansible的vmware_guest module，并且通过调用这个模块实现了批量从模板克隆虚拟机（包括Linux和Windows），后来萌生了能否用Python重构这个功能的想法，于是2021年2月中旬着手开始，到2021年3月中旬历时一个月，已经完成从文件读取虚拟机配置，并克隆虚拟机的功能，同样包括了Linux和Windows。主要参考文档如下：<br />
-<a href="https://vdc-download.vmware.com/vmwb-repository/dcr-public/3325c370-b58c-4799-99ff-58ae3baac1bd/45789cc5-aba1-48bc-a320-5e35142b50af/doc/left-pane.html">VMware Python SDK api文档，版本为vCenter6.7</a><br />
-<a href="https://chriskiehl.com/article/parallelism-in-one-line">Parallelism in One Line with Python，国外大神针对Python并发编程的一篇文章</a><br />
-<a href="https://github.com/vmware/pyvmomi">pyvmomi on github</a><br />
-<a href="https://pypi.org/project/pyvmomi/">pyvmomi on pypi.org</a><br />
-<a href="https://docs.python.org/3/library/atexit.html">atexit模块文档，用来做程序退出时的处理，在这个case中是做vcenter账号注销退出的</a>  </p>
-<h2 id="vmware-vsphere-python-sdk">VMware vSphere Python SDK心得体会</h2>
+<p>起因是这样的，通过RVtools导出的虚拟机信息中，disk in use字段总和与vcenter中看到的磁盘占用量不相等，且差值超过了10T。研究到最后发现是虚机磁盘精简置备的问题。<br />
+<a href="https://www.nakivo.com/blog/thick-and-thin-provisioning-difference/">Thick and Thin Provisioning: What Is the Difference?</a>  </p>
+<h2 id="_2">厚置备</h2>
+<p>当虚拟机磁盘采用厚置备模式，完整的空间会直接分配给虚拟机，被分配出去的空间不能再被其他虚拟机使用了，并且厚置备也分两种模式。  </p>
 <ul>
-<li>VMware vSphere Python SDK可以通过<code>pip install pyvmomi</code>安装，如果无法直连公网，可以通过github或者python官网下载并离线安装，进行api调用开发需要import pyVmomi和pyVim两个包。  </li>
-<li>对vmware进行任何操作之前，都需要进行调用登录连接到vcetner，调用pyVim.connect内SmartConnectNoSSL方法，返回一个SmartConnect方法，SmartConnect再返回一个Connect方法，Connect方法最后返回一个service instance对象（si）。si.content直接获得属性值 和 content = si.RetrieveContent()通过RetrieveContent()方法获得的值是相同的。</li>
-<li>得到content后，通过一系列的api method拿到克隆机器的所需参数，最后CloneVM_Task方法实现克隆机器。  </li>
+<li>厚置备延迟置零（Lazy zeroed disk）  </li>
 </ul>
-<h2 id="_2">实现并发</h2>
-<p>在api文档上花了一段时间后，对api文档渐渐熟悉起来，于是顺利完成了克隆虚机的功能。但是ansible装机默认并发是5，即可以支持同时5台虚机的安装，但是自己的python脚本通过for循环实现的克隆没有并发，由于添加了wait_for_task函数，函数会等到安装任务结束后返回任务执行结果，因此for循环的实现效果就是单次安装一台虚拟机，等到安装结束后才能开始下一台的安装。于是决定实现和ansible同样效果的想法。<br />
-据我目前所知，python中有三个包可以实现并发功能，分别是multiprocessing.Pool, multiprocessing.ThreadPool, threading,先尝试了一下multiprocessing.ThreadPool，实现方式很简单<br />
-<code>pool = ThreadPool()</code><br />
-<code>pool.map(function, iterable_var)</code><br />
-<code>pool.close()</code><br />
-<code>pool.join()</code><br />
-先定义一个线程池，随后调用map方法，第一个变量是线程需要执行的函数方法，第二个变量是一个可迭代的变量。map方法会将iterable_var中的每个值丢进function中执行。这种方法我只写了个demo，并没有实际运用到克隆机器的案例中。<br />
-ThreadPool方法实现很简单，符合python代码简洁的初衷，threading有点繁琐，不仅需要写一个线程类，还需要维护queue队列（你需要把虚拟机的参数从txt文件维护到queue中，再让线程从queue读取数据来克隆虚拟机），出于没有写过并发编程，最后还是采用了threading模块实现并发。threading模块实现并发功能的核心是这样的，从Thread类继承，子类中重写run方法，run方法内就是线程需要干的活。<br />
-<code>class sub_class(threading.Thread)</code> #声明子类<br />
-<code>worker = sub_class(args)</code> #实例化子类，即线程<br />
-<code>worker.start()</code> #线程运行，具体工作定义在run方法中  </p>
+<p>这种类型的厚置备磁盘会把完整的空间分配给虚拟机，但是磁盘空间上可能会存在还没有被清零的旧数据。当虚拟机需要往磁盘上写数据的时候，需要先把磁盘清零，再做写操作。从创建时间上来说，Lazy zeroed disk比Eager zeroed disk更快，但是从使用角度来看，Eager zeroed disk读写性能会比Eager zeroed disk差一点，因为它需要先做清零的动作。</p>
+<ul>
+<li>厚置备置零（Eager zeroed disk）  </li>
+</ul>
+<p>这种类型的厚置备磁盘会把完整的空间分配给虚拟机，并且会直接把磁盘上的旧数据清楚干净，相对Lazy zeroed disk，创建起来会慢一些但是performance会更好。  </p>
+<p><img alt="Thick" src="../img/thick-provisioning.jpg" /></p>
+<h2 id="_3">精简置备</h2>
+<p>就是俗称的超分配，在虚机需要空间的时候再去增长空间。因为可以超分配空间，且磁盘上占据空间为实际数据落盘空间，所以对于想节省存储空间来说这个模式很好用。性能上来说会比任意一种厚置备都差。<br />
+<img alt="Thin" src="../img/thin-provisioning.jpg" /></p>
+<p>当你从精简置备的虚机上删除数据的时候，硬盘上的数据并没有被删除，只是删除了指向实际数据的index，所以通过RVtools导出的disk in use会比较大，因为磁盘上的数据尚未删除，但是这部分磁盘已经被datastore标记为free了，是可分配出去的磁盘，所以从vcenter上看到datastore的数据已经被释放了。</p>
+<p><img alt="delete" src="../img/operating-system.jpg" />  </p>
+<p>对于精简置备来说，虽然可以超分配，但是超分配也容易带来问题，举个例子，你有一块20G的存储，和三台虚机，每台虚机以精简置备的方式分配了10G的空间，当20G的存储被写满时，这三台精简置备的虚机都会挂掉，如果想要恢复那必须将机器迁移到其他存储上才行。所以最佳实践来说vcenter虚机需要和其他业务虚机放在分开的存储上，万一业务存储挂了，那vcenter不受影响，可以继续登录并管理虚机集群。  </p>
+<p>另外，精简置备的机器可以在虚机上删除文件后，将不使用的磁盘部分shrink出来，具体方法可以参考上文的链接，个人觉得对数据有风险，所以没有操作过。  </p>
               
             </div>
           </div>
@@ -195,10 +191,10 @@ ThreadPool方法实现很简单，符合python代码简洁的初衷，threading�
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../vmware_disk/" class="btn btn-neutral float-right" title="精简置备和厚置备的区别">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../smbv1/" class="btn btn-neutral float-right" title="Disable SMBv1引发事件">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../dns/" class="btn btn-neutral" title="DNS基础"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../vmware_api/" class="btn btn-neutral" title="VMware Python SDK实现克隆虚机"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -224,10 +220,10 @@ ThreadPool方法实现很简单，符合python代码简洁的初衷，threading�
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../dns/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../vmware_api/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../vmware_disk/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../smbv1/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
