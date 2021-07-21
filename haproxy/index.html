@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>初窥haproxy - Learning Exp</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "\u521d\u7aa5haproxy";
+    var mkdocs_page_input_path = "haproxy.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Microsoft</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../ntpinad/">AD域内的时间同步</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../windows_auth/">Windows认证</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Linux</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../dns/">DNS基础</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../dd/">用dd命令测试磁盘IO</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">初窥haproxy</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#_2">实现过程</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../firewalld/">firewalld服务</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">VMware</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../vmware_api/">VMware Python SDK实现克隆虚机</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../vmware_disk/">精简置备和厚置备的区别</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Case</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../smbv1/">Disable SMBv1引发事件</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../mail_delay/">内部邮件delay事件</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Linux &raquo;</li>
+        
+      
+    
+    <li>初窥haproxy</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>最近一段时间bilibili上看了两个关于反向代理、负载均衡的视频，主要以nginx和haproxy为主。寻思自己动手搭建一下简单的反向代理和负载均衡的环境。</p>
+<h2 id="_2">实现过程</h2>
+<p>两台虚拟机192.168.74.128，安装haproxy+两个http服务，http服务通过docker部署
+192.168.74.129，作为客户端访问haproxy服务。
+128上配置公网docker源<br />
+<code>wget https://mirrors.163.com/docker-ce/linux/centos/docker-ce.repo</code><br />
+<code>yum install docker-ce</code><br />
+遇到报错，缺少依赖，这几个依赖包在centos-extra源内，通过配置extra源解决。<br />
+<code>Error: Package: docker-ce-rootless-extras-20.10.6-3.el7.x86_64 (docker-ce-stable)</code><br />
+<code>Requires: slirp4netns &gt;= 0.4</code><br />
+<code>Error: Package: 3:docker-ce-20.10.6-3.el7.x86_64 (docker-ce-stable)</code><br />
+<code>Requires: container-selinux &gt;= 2:2.74</code><br />
+<code>Error: Package: docker-ce-rootless-extras-20.10.6-3.el7.x86_64 (docker-ce-stable)</code><br />
+<code>Requires: fuse-overlayfs &gt;= 0.7</code><br />
+<code>Error: Package: containerd.io-1.4.4-3.1.el7.x86_64 (docker-ce-stable)</code><br />
+<code>Requires: container-selinux &gt;= 2:2.74</code>  </p>
+<p>安装完毕，配置docker镜像加速器。通过阿里云获得加速器地址。配置完毕后docker info可以查看加速已生效。<br />
+<code>sudo mkdir -p /etc/docker</code><br />
+<code>sudo tee /etc/docker/daemon.json &lt;&lt;-'EOF'</code><br />
+<code>{</code><br />
+<code>"registry-mirrors": ["https://mie7pdyw.mirror.aliyuncs.com"]</code><br />
+<code>}</code><br />
+<code>EOF</code><br />
+<code>sudo systemctl daemon-reload</code><br />
+<code>sudo systemctl restart docker</code>  </p>
+<p><code>Registry Mirrors:</code><br />
+<code>https://mie7pdyw.mirror.aliyuncs.com/</code>  </p>
+<p><code>[root@lblab yum.repos.d]# docker pull httpd</code><br />
+<code>[root@lblab yum.repos.d]# docker image ls</code><br />
+<code>REPOSITORY   TAG       IMAGE ID       CREATED      SIZE</code><br />
+<code>httpd        latest    45561c1ef88a   4 days ago   138MB</code>  </p>
+<p><code>[root@lblab yum.repos.d]# docker run --name web1 -d httpd</code><br />
+<code>[root@lblab yum.repos.d]# docker exec -it web1 /bin/bash</code><br />
+<code>echo web1 &gt;&gt; index.html</code><br />
+修改index页面，以区分两个http服务<br />
+<code>[root@lblab yum.repos.d]# docker inspect web1</code><br />
+查看container web1的地址<br />
+<code>"IPAddress": "172.17.0.2",</code><br />
+<code>[root@lblab yum.repos.d]# curl 172.17.0.2</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web1</code><br />
+查看修改结果</p>
+<p>同样方法启动第二个web服务<br />
+<code>[root@lblab yum.repos.d]# docker run --name web2 -d httpd</code><br />
+<code>[root@lblab yum.repos.d]# docker ps</code><br />
+<code>CONTAINER ID   IMAGE     COMMAND              CREATED         STATUS         PORTS     NAMES</code><br />
+<code>a1f504cbda46   httpd     "httpd-foreground"   3 seconds ago   Up 2 seconds   80/tcp    web2</code><br />
+<code>13d3e8b58efd   httpd     "httpd-foreground"   5 minutes ago   Up 5 minutes   80/tcp    web1</code>  </p>
+<p><code>[root@lblab yum.repos.d]# docker exec -it web2 /bin/bash</code><br />
+<code>echo web2 &gt;&gt; index.html</code><br />
+<code>[root@lblab yum.repos.d]# docker inspect web2</code><br />
+<code>"IPAddress": "172.17.0.3",</code><br />
+<code>[root@lblab yum.repos.d]# curl 172.17.0.3</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web2</code>  </p>
+<p>安装haproxy <br />
+<code>yum install -y haproxy</code>  </p>
+<p>配置文件路径/etc/haproxy/haproxy.cfg<br />
+<code>frontend webbind *:80</code><br />
+<code>default_backend websrvs</code><br />
+<code>backend websrvs</code><br />
+<code>server web1 172.17.0.2:80 check</code><br />
+<code>server web2 172.17.0.3:80 check</code>  </p>
+<p><code>[root@dns yum.repos.d]# while true; do curl 192.168.74.128;sleep 1s;done</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web1</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web2</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web1</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web2</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web1</code><br />
+<code>&lt;html&gt;&lt;body&gt;&lt;h1&gt;It works!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</code><br />
+<code>web2</code>  </p>
+<p>完成round robin配置</p>
+<p>haproxy存在心跳机制，用来检测后端服务端口监听是否正常，如果多次发现后端服务的端口监听异常，
+它会将端口异常的服务从分发列表内移除。</p>
+<p>haproxy对于后端的服务器就算请求没过来也有一直在健康检测，发现有故障的时候在请求没到来的时候会切掉，但如果在检测期间请求到达的话，会有异常。haproxy只会把请求转到后端的一台服务器。</p>
+<p>nginx对于后端的服务器没有一直在健康检测，请求过来的时候，分发还是进行分发，只是请求不到数据的时候，会再向好的机器进行请求，直到请求正常为止。nginx请求转到后端一台不成功的话，还会转向另外一台服务器</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../firewalld/" class="btn btn-neutral float-right" title="firewalld服务">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../dd/" class="btn btn-neutral" title="用dd命令测试磁盘IO"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../dd/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../firewalld/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>

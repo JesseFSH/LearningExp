@@ -7,16 +7,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   
-  <link rel="shortcut icon" href="./img/favicon.ico">
-  <title>Learning Exp</title>
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>用dd命令测试磁盘IO - Learning Exp</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
-  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
   
-  <script src="./js/jquery-2.1.1.min.js" defer></script>
-  <script src="./js/modernizr-2.8.3.min.js" defer></script>
+  <script>
+    // Current page data
+    var mkdocs_page_name = "\u7528dd\u547d\u4ee4\u6d4b\u8bd5\u78c1\u76d8IO";
+    var mkdocs_page_input_path = "dd.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
@@ -29,9 +36,9 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
       <div class="wy-side-nav-search">
-        <a href="./." class="icon icon-home"> Learning Exp</a>
+        <a href=".." class="icon icon-home"> Learning Exp</a>
         <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
@@ -43,7 +50,7 @@
           
             <li class="toctree-l1">
 		
-    <a class="" href="./.">Home</a>
+    <a class="" href="..">Home</a>
 	    </li>
           
             <li class="toctree-l1">
@@ -52,15 +59,15 @@
     <ul class="subnav">
                 <li class="">
                     
-    <a class="" href="./exchange/">Exchange 2013 Cu补丁升级</a>
+    <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
                 </li>
                 <li class="">
                     
-    <a class="" href="./ntpinad/">AD域内的时间同步</a>
+    <a class="" href="../ntpinad/">AD域内的时间同步</a>
                 </li>
                 <li class="">
                     
-    <a class="" href="./windows_auth/">Windows认证</a>
+    <a class="" href="../windows_auth/">Windows认证</a>
                 </li>
     </ul>
 	    </li>
@@ -71,19 +78,31 @@
     <ul class="subnav">
                 <li class="">
                     
-    <a class="" href="./dns/">DNS基础</a>
+    <a class="" href="../dns/">DNS基础</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">用dd命令测试磁盘IO</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#_2">使用方法</a></li>
+        
+        </ul>
+    
+
+    </ul>
                 </li>
                 <li class="">
                     
-    <a class="" href="./dd/">用dd命令测试磁盘IO</a>
+    <a class="" href="../haproxy/">初窥haproxy</a>
                 </li>
                 <li class="">
                     
-    <a class="" href="./haproxy/">初窥haproxy</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="./firewalld/">firewalld服务</a>
+    <a class="" href="../firewalld/">firewalld服务</a>
                 </li>
     </ul>
 	    </li>
@@ -94,11 +113,11 @@
     <ul class="subnav">
                 <li class="">
                     
-    <a class="" href="./vmware_api/">VMware Python SDK实现克隆虚机</a>
+    <a class="" href="../vmware_api/">VMware Python SDK实现克隆虚机</a>
                 </li>
                 <li class="">
                     
-    <a class="" href="./vmware_disk/">精简置备和厚置备的区别</a>
+    <a class="" href="../vmware_disk/">精简置备和厚置备的区别</a>
                 </li>
     </ul>
 	    </li>
@@ -109,11 +128,11 @@
     <ul class="subnav">
                 <li class="">
                     
-    <a class="" href="./smbv1/">Disable SMBv1引发事件</a>
+    <a class="" href="../smbv1/">Disable SMBv1引发事件</a>
                 </li>
                 <li class="">
                     
-    <a class="" href="./mail_delay/">内部邮件delay事件</a>
+    <a class="" href="../mail_delay/">内部邮件delay事件</a>
                 </li>
     </ul>
 	    </li>
@@ -128,7 +147,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="./.">Learning Exp</a>
+        <a href="..">Learning Exp</a>
       </nav>
 
       
@@ -136,9 +155,15 @@
         <div class="rst-content">
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="./.">Docs</a> &raquo;</li>
+    <li><a href="..">Docs</a> &raquo;</li>
     
+      
+        
+          <li>Linux &raquo;</li>
+        
+      
     
+    <li>用dd命令测试磁盘IO</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -148,22 +173,24 @@
           <div role="main">
             <div class="section">
               
-
-  <h1 id="search">Search Results</h1>
-
-  <form id="content_search" action="search.html">
-    <span role="status" aria-live="polite" class="ui-helper-hidden-accessible"></span>
-    <input name="q" id="mkdocs-search-query" type="text" class="search_input search-query ui-autocomplete-input" placeholder="Search the Docs" autocomplete="off" autofocus title="Type search term here">
-  </form>
-
-  <div id="mkdocs-search-results" class="search-results">
-    Searching...
-  </div>
-
-
+                <h1 id="_1">概述</h1>
+<p>dd是linux中一个复制数据的命令，使用的时候要小心，不当的使用很容易造成数据丢失。这里讨论一下用dd来查看磁盘的读写性能。</p>
+<h2 id="_2">使用方法</h2>
+<p>操作系统一般不会直接从硬盘中读写数据，暂时不在使用的内存会被用来缓存读写信息，所以当使用dd来测试磁盘读写性能时，需要用<code>oflag</code>参数来规避缓存的影响，可以把<code>oflag</code>的值设定为<code>direct</code><br />
+为了计算磁盘性能，可以从<code>/dev/zero</code>读数据，写到一块空的磁盘上，比如<code>/dev/sda</code>或者一块磁盘分区，比如<code>/dev/sda2</code>，输出文件也可以是一个普通的文件<code>/root/testfile</code>。命令：<code>dd if=/dev/zero of=/root/testfile bs=1G count=1 oflag=direct</code>，命令中，数据块大小为1G，数量为1，Linux系统会需要1G的空内存来处理这个写的过程，如果内存不够的话，可以把数据块调小，数量调大来实现。  </p>
+              
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../haproxy/" class="btn btn-neutral float-right" title="初窥haproxy">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../dns/" class="btn btn-neutral" title="DNS基础"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -187,12 +214,16 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
+        <span><a href="../dns/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../haproxy/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
-    <script>var base_url = '.';</script>
-    <script src="./js/theme.js" defer></script>
-      <script src="./search/main.js" defer></script>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
 
 </body>
 </html>

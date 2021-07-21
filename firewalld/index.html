@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>firewalld服务 - Learning Exp</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "firewalld\u670d\u52a1";
+    var mkdocs_page_input_path = "firewalld.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Microsoft</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../exchange/">Exchange 2013 Cu补丁升级</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../ntpinad/">AD域内的时间同步</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../windows_auth/">Windows认证</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Linux</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../dns/">DNS基础</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../dd/">用dd命令测试磁盘IO</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../haproxy/">初窥haproxy</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">firewalld服务</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#_1">概述</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#zones">Zones</a></li>
+        
+            <li><a class="toctree-l4" href="#services">Services</a></li>
+        
+            <li><a class="toctree-l4" href="#runtimepermanent">Runtime和Permanent</a></li>
+        
+            <li><a class="toctree-l4" href="#port">Port</a></li>
+        
+            <li><a class="toctree-l4" href="#source">Source</a></li>
+        
+            <li><a class="toctree-l4" href="#icmp">ICMP管理</a></li>
+        
+            <li><a class="toctree-l4" href="#direct-rule">Direct Rule</a></li>
+        
+            <li><a class="toctree-l4" href="#rich-rule">Rich Rule</a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">VMware</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../vmware_api/">VMware Python SDK实现克隆虚机</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../vmware_disk/">精简置备和厚置备的区别</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Case</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../smbv1/">Disable SMBv1引发事件</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../mail_delay/">内部邮件delay事件</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Linux &raquo;</li>
+        
+      
+    
+    <li>firewalld服务</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>最近研究了一下RHEL的firewalld，参考文档：<br />
+<a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/security_guide/sec-using_firewalls">Redhat Firewalld Doc</a><br />
+<a href="https://www.computernetworkingnotes.com/linux-tutorials/firewalld-basic-concepts-explained-with-examples.html">Firewalld Examples</a><br />
+<a href="https://zhuanlan.zhihu.com/p/165602516">Firewalld Examples</a>  </p>
+<h2 id="zones">Zones</h2>
+<p>RHEL系统内预定义了若干个zone，每个zone可以看作是一组规则集。预定义的zone在/usr/lib/firewalld/zones/该目录下。默认启用的是public zone。zone内的规则都是可以修改的，通过firewall-cmd来操作防火墙的时候，是将请求发送给了NetworkManager服务，而并非由firewalld服务直接处理请求。<br />
+Example<br />
+1. 查看当前默认zone
+<code>firewall-cmd --get-default-zone</code><br />
+2. 设置默认zone
+<code>firewall-cmd --set-default-zone zone-name</code><br />
+3. 查看生效的zone并且显示哪些网卡分配给了zone
+<code>firewall-cmd --get-active-zones</code><br />
+4. 分配网卡到新zone
+<code>firewall-cmd --zone=zone-name --change-interface=&lt;interface-name&gt;</code><br />
+5. 修改zone的target策略
+<code>firewall-cmd --zone=zone-name --set-target=&lt;default|ACCEPT|REJECT|DROP&gt;</code>  </p>
+<h2 id="services">Services</h2>
+<p>同样，系统内预定义了很多Services，每个Service包含了服务所需的默认端口集。预定义的services在/usr/lib/firewalld/services/，可以该目录下的预定义services文件来创建自定义的service。自定义的services在/etc/firewalld/services/。<br />
+Example<br />
+1. 从xml配置文件新建service
+<code>firewall-cmd --new-service-from-file=service-name.xml</code></p>
+<h2 id="runtimepermanent">Runtime和Permanent</h2>
+<p>任何运行在runtime模式下的配置都仅在firewalld运行时生效，如果firewalld重启或者firewall-cmd --reload时，所有设置都会被回退到permanent时的值。如果通过firewall-cmd修改配置，想直接以永久生效的策略运行，可以直接加--permanent参数。也可以运行在runtime后，再追加firewall-cmd --runtime-to-permanent，使runtime配置刷新至permanent。
+Example<br />
+1. 修改配置后，验证效果，并刷新到permanent
+<code>firewall-cmd &lt;options&gt;</code>
+<code>firewall-cmd --runtime-to-permanent</code><br />
+2. 直接修改配置到permanent，再reload生效
+<code>firewall-cmd --permanent &lt;options&gt;</code>
+<code>firewall-cmd --reload</code></p>
+<h2 id="port">Port</h2>
+<p>开放端口始终秉持最小化原则，不用不开。<br />
+Example<br />
+1. 查看所有允许端口
+<code>firewall-cmd --list-ports</code><br />
+2. 增加开放端口，允许被访问
+<code>firewall-cmd --add-port=port-number/port-type</code><br />
+3. 删除开放端口
+<code>firewall-cmd --remove-port=port-number/port-type</code>  </p>
+<h2 id="source">Source</h2>
+<p>把source添加到zone中，来管理来自特定源地址的网络流量。当数据包抵达的时候，firewalld先检查源地址是否能匹配到某个zone内的source，如果可以匹配到，那就走那个zone的规则。如果源地址不属于任何一个zone的source，则取决于流量是从哪个网卡进入的，则匹配该网卡所在的zone。
+Example
+1. 在指定zone添加source
+<code>firewall-cmd --zone=zone-name --add-source=&lt;source&gt;</code>
+2. 指定zone列出所有sources
+<code>firewall-cmd --zone=zone-name --list-sources</code></p>
+<h2 id="icmp">ICMP管理</h2>
+<p>firewalld提供屏蔽ICMP请求的功能，当zone target=REJECT的时候，ping包会收到reject的请求。这种情况对于攻击者来说，仍然可以知道该IP是活着的，所以针对这种情况，应该丢弃所有ICMP请求，要做的是把target改成DROP。在企业内网中，我倾向于放开ICMP请求，方便troubleshooting等工作。</p>
+<h2 id="direct-rule">Direct Rule</h2>
+<p>直接规则语法和iptables类似，可以用firewall-cmd --direct --get-rules来查看通过firewall-cmd --direct --add-rule添加的规则。这部分添加的规则不属于任何zone，添加语法：<code>[--permanent] --direct --add-rule { ipv4 | ipv6 | eb } table chain priority args</code></p>
+<h2 id="rich-rule">Rich Rule</h2>
+<p>rich rule的语法规则比较人性化，不抽象。可以用来制定复杂的规则。
+添加语法：<code>firewall-cmd [--zone=zone] --add-rich-rule='rule' [--timeout=timeval]</code><br />
+上面引号内的rule具体语法如下：</p>
+<p><code>rule [family="rule family"]</code><br />
+<code>[ source [NOT] [address="address"] [mac="mac-address"] [ipset="ipset"] ]</code><br />
+<code>[ destination [NOT] address="address" ]</code><br />
+<code>[ element ]</code><br />
+<code>[ log [prefix="prefix text"] [level="log level"] [limit value="rate/duration"] ]</code><br />
+<code>[ audit ]</code><br />
+<code>[ action ]</code>  </p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../vmware_api/" class="btn btn-neutral float-right" title="VMware Python SDK实现克隆虚机">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../haproxy/" class="btn btn-neutral" title="初窥haproxy"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../haproxy/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../vmware_api/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+
+</body>
+</html>
