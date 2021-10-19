@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>SPF记录 - Learning Exp</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "SPF\u8bb0\u5f55";
+    var mkdocs_page_input_path = "spf.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Learning Exp</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Microsoft</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../exchange/">Exchange 2013 Cu补丁升级</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../ntpinad/">AD域内的时间同步</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../windows_auth/">Windows认证</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Linux</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../dns/">DNS基础</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dd/">用dd命令测试磁盘IO</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../haproxy/">初窥haproxy</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../firewalld/">firewalld服务</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">VMware</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../vmware_api/">VMware Python SDK实现克隆虚机</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../vmware_disk/">精简置备和厚置备的区别</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">邮件相关</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">SPF记录</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#spf">spf是什么</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">工作原理</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#spf_1">如何添加和spf语法</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#version">Version</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mechanism">Mechanism</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#qualifier">Qualifier</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#modifier">Modifier</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#spf_2">如何查询spf记录+实例分析</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#nslookup">nslookup</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dig">dig</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_3">工具</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Case</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../smbv1/">Disable SMBv1引发事件</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../mail_delay/">内部邮件delay事件</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Learning Exp</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>邮件相关 &raquo;</li>
+        
+      
+    
+    <li>SPF记录</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="_1">概述</h1>
+<p>此文章旨在把SPF记录讲清楚，并且加深自己对这方面的理解和印象，学习过程中参考了以下文档：<br />
+<a href="https://chenxy.me/email-spf/">一篇讲的很清晰的中文博客</a><br />
+<a href="https://support.powerdmarc.com/support/solutions/articles/60000664617-spf-records#:~:text=Mechanism%20Mechanisms%20are%20elements%20of%20the%20SPF%20record,IP%20in%20the%20A%20record%2C%20this%20mechanism%20passes.">一篇讲的很清晰的英文文章</a>
+<a href="https://www.smartertools.com/blog/2019/04/09-understanding-spf-dkim-dmarc">不仅讲了spf，还讲了dkim和dmarc</a><br />
+<a href="https://www.cisco.com/c/en/us/support/docs/security/secure-email-gateway/217073-how-to-use-dig-nslookup-to-find-spf-dki.html">如何用nslookup和dig来查找spf, dkim, dmarc记录</a><br />
+<a href="https://mxtoolbox.com/">免费在线工具，功能强大，可以查spf，可以做邮件头分析等等等等</a>  </p>
+<h2 id="spf">spf是什么</h2>
+<p>SPF (Sender Policy Framework) 意在防止邮件欺诈行为发生，邮件接收方会借助SPF记录来识别发件服务器是否合法，并根据SPF记录的指示判断是否接收邮件。举个例子，任何人都可以假冒dummy@my-domain.com向其他人发送邮件，对于my-domain.com来说，如果存在spf机制，则收件方可以通过验证spf记录，只有被my-domain.com授权的服务器才能以dummy@my-domain.com作为发件人发送邮件。</p>
+<h2 id="_2">工作原理</h2>
+<p>一图流！
+<img alt="spf" src="../img/SPF.jpg" /></p>
+<ol>
+<li>发件人发送邮件</li>
+<li>收件人的邮件服务器接收到了邮件</li>
+<li>收件人的邮件服务器通过发件人的domain，去DNS服务器上获取SPF记录</li>
+<li>DNS服务器返回SPF记录</li>
+<li>检查发件方发送邮件的服务器IP地址是否被SPF记录授权。如果是，则正常接收邮件。如果不是，则该邮件会被当做spam，具体处理措施也会在spf记录内定义。</li>
+</ol>
+<h2 id="spf_1">如何添加和spf语法</h2>
+<h5 id="version">Version</h5>
+<p>spf记录以'v='开头，这里定义了spf的版本，一般都写spf1，spf1是最常用的，且所有客户端都能识别。</p>
+<h5 id="mechanism">Mechanism</h5>
+<p>mechanism是spf记录内的对象，用来表示客户端需要去验证的对象。下面列举所有对象，这里听起来比较抽象，结合实际案例一看就明白了。  </p>
+<ul>
+<li>
+<p>a — 如果发送方IP地址命中域名下任意A记录，则匹配成功</p>
+</li>
+<li>
+<p>ip4 — 指定发送方的IPv4地址或地址段</p>
+</li>
+<li>
+<p>ip6 — 指定发送方的IPv6地址或地址段</p>
+</li>
+<li>
+<p>mx — 如果发送方IP地址命中域名下任意MX记录，则匹配成功</p>
+</li>
+<li>
+<p>ptr — 利用发送方IP做反向解析查找到主机名，如果匹配到spf记录内写的主机名，则匹配成功（不常用）</p>
+</li>
+<li>
+<p>exists — 格式为 exists: domain-spec，接收方将向指定域名发送一条 A 记录查询，如果有任何返回则匹配成功。可以用来做一些比较复杂的校验。（不常用）</p>
+</li>
+<li>
+<p>include — include 的格式为 include: domain-spec，它将会触发一次递归的 SPF 校验过程，让邮件接收方去检查 domain-spec 所设置的 SPF 记录。只有当 domain-spec 的校验结果是 pass 时（注意：soft fail 也不行），本项 mechanism 才会被视为匹配成功。include 机制被期望用于处理「跨行政边界」的情况，即所需要的 SPF 规则被置于不属于本域管辖的域名之下。</p>
+</li>
+<li>
+<p>all — 永远会成功匹配，鉴于这个原因，all 后边的 mechanism 将不会生效。all 一般作为最后一个 mechanism，配合 qualifier 用以配置「默认行为」——如果其他策略全部匹配失败了，本域对这些漏网之鱼的政策是什么。放在spf结尾。</p>
+</li>
+</ul>
+<h5 id="qualifier">Qualifier</h5>
+<table>
+<thead>
+<tr>
+<th>Qualifier</th>
+<th>Result</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+</td>
+<td>pass</td>
+<td>表示被允许发送的IP，默认此qualifier，可以省略</td>
+</tr>
+<tr>
+<td>-</td>
+<td>fail</td>
+<td>表示不被允许发送的IP</td>
+</tr>
+<tr>
+<td>~</td>
+<td>Soft Fail</td>
+<td>软错误，一个较弱的声明，同样表示不被允许发送</td>
+</tr>
+<tr>
+<td>?</td>
+<td>Neutral</td>
+<td>本域的管理者未明确声明该发送方的机器是否通过检查（不常用）</td>
+</tr>
+</tbody>
+</table>
+<h5 id="modifier">Modifier</h5>
+<p>Modifier不是必须项，感觉用处不大，这里跳过不作介绍了。</p>
+<h2 id="spf_2">如何查询spf记录+实例分析</h2>
+<h5 id="nslookup">nslookup</h5>
+<p>nslookup查找spf记录
+<code>nslookup -qt=txt csvw.com</code><br />
+得到spf记录
+<code>"v=spf1 a mx ip4:167.139.8.201 mx:mail1.csvw.com ip4:222.68.248.2 ip4:222.68.248.5 ip4:58.246.112.99 ip4:58.246.112.101 -all"</code><br />
+该spf记录表示发件方IP命中csvw.com域内任意A记录或任意MX记录或指定的几个IP地址和MX地址即可被允许发送，其余的都被拒绝。</p>
+<h5 id="dig">dig</h5>
+<p>dig查找spf记录
+<code>dig csvw.com txt</code>
+同样可以得到spf记录</p>
+<h5 id="_3">工具</h5>
+<p>网上有很多在线工具，可以做spf记录查询，文章开头<code>https://mxtoolbox.com/</code> 此工具可以实现spf查询，非常好用</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../smbv1/" class="btn btn-neutral float-right" title="Disable SMBv1引发事件">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../vmware_disk/" class="btn btn-neutral" title="精简置备和厚置备的区别"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../vmware_disk/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../smbv1/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
