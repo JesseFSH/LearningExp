@@ -137,10 +137,10 @@
                 <h1 id="202111">2021.11</h1>
 <p>通过公网QQ邮箱给仅开放给内部的Exchange邮件组发邮件，结果发现内部人员收到了邮件。</p>
 <h2 id="root-cause">root cause以及排查过程</h2>
-<p>Exchange powershell收集日志。包括：
-<code>Get-DistributionGroup &lt;group_name&gt; | fl &gt; &lt;file_name&gt;   收集Exchange通讯组信息</code>
-<code>Get-TransportService | Get-MessageTrackingLog -MessageID &lt;ID&gt; -ResultSize unlimited | fl &gt; &lt;file_name&gt;   收集相关邮件记录信息</code>
-最后发现邮件在进入Symantec邮件网关的时候，自动对邮件组进行了展开，当邮件网关将邮件传递给Exchange的时候，已经展开为传递给所有个人组成员了，通讯组层面的控制已经不起作用了。</p>
+<p>Exchange powershell收集日志。包括：  </p>
+<p><code>Get-DistributionGroup &lt;group_name&gt; | fl &gt; &lt;file_name&gt;   收集Exchange通讯组信息</code>  </p>
+<p><code>Get-TransportService | Get-MessageTrackingLog -MessageID &lt;ID&gt; -ResultSize unlimited | fl &gt; &lt;file_name&gt;   收集相关邮件记录信息</code>  </p>
+<p>最后发现邮件在进入Symantec邮件网关的时候，自动对邮件组进行了展开，当邮件网关将邮件传递给Exchange的时候，已经展开为传递给所有个人组成员了，通讯组层面的控制已经不起作用了。</p>
               
             </div>
           </div>
