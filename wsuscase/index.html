@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>内部邮件delay事件 - Learning Exp</title>
+  <title>WSUS报错0x80244010 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "\u5185\u90e8\u90ae\u4ef6delay\u4e8b\u4ef6";
-    var mkdocs_page_input_path = "mail_delay.md";
+    var mkdocs_page_name = "WSUS\u62a5\u95190x80244010";
+    var mkdocs_page_input_path = "wsuscase.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -88,15 +88,17 @@
                 <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../smbv1/">Disable SMBv1引发事件</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">内部邮件delay事件</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_1">排查思路</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../mail_delay/">内部邮件delay事件</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../mail_case01/">Exchange内部通讯组ACL控制失效</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../wsuscase/">WSUS报错0x80244010</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">WSUS报错0x80244010</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#case">case现象</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_1">解决方案</a>
+    </li>
+    </ul>
                     </li>
                 </ul>
       </div>
@@ -124,7 +126,7 @@
         
       
     
-    <li>内部邮件delay事件</li>
+    <li>WSUS报错0x80244010</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -136,16 +138,21 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="20210325-case">2021.03.25 case现象</h1>
-<p>11:00陆续收到用户反馈无法接收某一发送给群组的邮件，该邮件10:02发出，但是部分用户无延迟正常接收。且其它内部邮件收发正常，无延迟。</p>
-<h2 id="_1">排查思路</h2>
+                <h1 id="2021128-wsus-case">2021.12.8 wsus case</h1>
+<p>这个问题困扰了很久，经常遇到服务器check for updates一直读条，最后报错。甚至是新装服务器也有这样的情况。</p>
+<h2 id="case">case现象</h2>
+<p>WindowsUpdate.log有如下报错特征：</p>
+<ul>
+<li>WARNING: WU client failed Searching for update with error 0x80244010</li>
+<li>WARNING: Exceed max server round trips: 0x80244010 + SyncUpdates round trips:201</li>
+</ul>
+<p>官方KB报错描述参考：https://docs.microsoft.com/en-us/windows/deployment/update/windows-update-error-reference</p>
+<h2 id="_1">解决方案</h2>
 <ol>
-<li>查看每台exhcange服务器是否正常，检查eventlog，正常。</li>
-<li>Get-MailboxDatabaseCopyStatus检查所有数据库挂载情况，正常。</li>
-<li>Get-Queue检查邮件发送队列是否存在堆积，正常。</li>
-<li>Get-MessageTrackingLog检查相关邮件发送日志，正常。</li>
-<li>https://mha.azurewebsites.net/ 通过这个在线工具分析邮件头发现有一跳从内部mailbox到mailbox delay了67分钟。</li>
-<li>最后发现与邮件群组发送的审批流相关，通过Get-MessageTrackingLog -sender 审批人邮箱地址 找到了一条审批通过的记录，是由审批人邮箱地址发送至MSExchApprovalxxxxxxxxxx@domainname.com的一封审批邮件，邮件发送的时间戳和用户发送邮件时间+delay时间完全吻合，故判断为审批人未及时审批导致的邮件delay。至于有部分用户无延迟正常接收邮件，是因为这部分用户不在需要审批的组内。</li>
+<li>备份所有WSUS（上游+下游）数据库SUSDB，可以通过SQL Server Management Studio进入数据库备份。</li>
+<li>将所有被取代的更新拒绝。</li>
+<li>WSUS控制台-&gt;选项-&gt;服务器清理向导Server Cleanup Wizard</li>
+<li>客户端停止Windows Update服务，重命名C:\Windows\SoftwareDistribution文件夹，启动Windows Update服务并运行check for updates</li>
 </ol>
               
             </div>
@@ -154,10 +161,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../mail_case01/" class="btn btn-neutral float-right" title="Exchange内部通讯组ACL控制失效">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href="../smbv1/" class="btn btn-neutral" title="Disable SMBv1引发事件"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../mail_case01/" class="btn btn-neutral" title="Exchange内部通讯组ACL控制失效"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -183,10 +188,8 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../smbv1/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../mail_case01/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../mail_case01/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
