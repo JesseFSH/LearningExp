@@ -82,6 +82,14 @@
                     <li class="toctree-l1"><a class="reference internal" href="../spf/">SPF记录</a>
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">DKIM记录</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#dkim">dkim是什么</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">工作原理</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#dkim_1">如何查询dkim记录</a>
+    </li>
+    </ul>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Case</span></p>
@@ -132,7 +140,35 @@
           <div role="main">
             <div class="section">
               
-                
+                <h1 id="_1">概述</h1>
+<p>此文章旨在把DKIM记录讲清楚，并且加深自己对这方面的理解和印象，学习过程中参考了以下文档：<br />
+<a href="https://www.docusign.com/how-it-works/electronic-signature/digital-signature/digital-signature-faq">数字签名工作原理</a><br />
+<a href="https://securitytrails.com/blog/what-is-dkim">DKIM工作原理</a><br />
+<a href="https://www.cisco.com/c/en/us/support/docs/security/secure-email-gateway/217073-how-to-use-dig-nslookup-to-find-spf-dki.html">how to use nslookup/dig to lookup dkim, dmarc, spf record</a></p>
+<h2 id="dkim">dkim是什么</h2>
+<p>DKIM (DomainKeys Identified Mail) 是一种邮件验证机制，收件人验证发件人的邮件是否被篡改。</p>
+<h2 id="_2">工作原理</h2>
+<p>由MTA(Mail Transfer Agent)，即邮件网关生成一对公私钥对，私钥存放在MTA，用作邮件外发时，在邮件头内生成数字签名。DKIM的数字签名长这个样子：<br />
+<code>DKIM-Signature a=rsa-sha1; q=dns;</code><br />
+<code>d=example.com;</code><br />
+<code>i=user@eng.example.com;</code><br />
+<code>s=jun2005.eng; c=relaxed/simple;</code><br />
+<code>t=1117574938; x=1118006938;</code><br />
+<code>h=from:to:subject:date;</code><br />
+<code>b=dzdVyOfAKCdLXdJOc9G2q8LoXSlEniSb</code><br />
+<code>av+yuU4zGeeruD00lszZVoG4ZHRNiYzR</code><br />
+公钥则以TXT记录的形式被添加到邮件域名zone内，DKIM的TXT记录长这个样子：<br />
+<code>example._domainkey.itverx.com.ve.86400 IN TXT "v=DKIM1\; g=*\; k=rsa\; p=MIGfM</code><br />
+<code>A0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqFGebZAOHfSGy9CWtA4Uads0zaXAy8TWtW9uIFbyIkFNC67fQVFVjsxlmcEg1oFNp2CrTYF1YNh2gB144c+XY5GVM2fGEYAKx3iBxajWTzsx3SvpQtAZ2Bvf2mV+Te+JtlbpxVuiuiW2Alqwhk1ytTWspf/S3bM73XssV+/mh9wIDAQAB"</code><br />
+当用户收到邮件时，收件方通过DNS记录查询拿到公钥，对数字签名做解密，得到hash值。再对邮件内容以双方协商的算法计算出hash值，两个hash值比对，如果相同则邮件内容未被篡改。  </p>
+<p>数字签名工作机制一图流：
+<img alt="spf" src="../img/digital_signature.png" /></p>
+<h2 id="dkim_1">如何查询dkim记录</h2>
+<p>dkim查询需要一个字符串，叫selector，selector可以在邮件头里找到。</p>
+<p>通过nslookup/dig查询dkim记录：<br />
+<code>nslookup selector._domainkey.domain txt</code><br />
+<code>dig selector._domainkey.domain txt</code>  </p>
+<p>也可以通过在线web工具查询</p>
               
             </div>
           </div>
