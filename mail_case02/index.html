@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Minds - Learning Exp</title>
+  <title>邮件头5322和5321from地址不同 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Minds";
-    var mkdocs_page_input_path = "minds.md";
+    var mkdocs_page_name = "\u90ae\u4ef6\u59345322\u548c5321from\u5730\u5740\u4e0d\u540c";
+    var mkdocs_page_input_path = "mail_case02.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -87,7 +87,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Case</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../smbv1/">Disable SMBv1引发事件</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../mail_delay/">内部邮件delay事件</a>
@@ -96,7 +96,15 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../wsuscase/">WSUS报错0x80244010</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../mail_case02/">邮件头5322和5321from地址不同</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">邮件头5322和5321from地址不同</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#_2">现象外部</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_3">转折点</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_4">解决方案</a>
+    </li>
+    </ul>
                     </li>
                 </ul>
       </div>
@@ -119,8 +127,12 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Case &raquo;</li>
+        
+      
     
-    <li>Minds</li>
+    <li>邮件头5322和5321from地址不同</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -132,11 +144,31 @@
           <div role="main">
             <div class="section">
               
-                
+                <h1 id="_1">事件经过</h1>
+<h3 id="_2">现象外部</h3>
+<p>用户使用工具发邮件到公司内部一个Exchange通讯组，邮件收不到。该通讯组成员嵌套了一个安全组，安全组内包含了实际的收件人。当时将通讯组+安全组&lt;允许外部用户发送到该组&gt;功能启用，并且调整&lt;可发送到该组&gt;的ACL清单，添加发件人地址aaa.bbb@contoso.com。仍无法收到邮件，邮件网关不存在记录。</p>
+<h3 id="_3">转折点</h3>
+<p>通过global用户提供的收件邮件头发现，邮件头内5321和5322From地址不同。将5321地址aaabbb@contoso.com加入到&lt;可发送到该组&gt;的ACL清单内后，邮件正常收到了。</p>
+<h3 id="_4">解决方案</h3>
+<ol>
+<li>调整通讯组+安全组&lt;可发送到该组&gt;的ACL清单，5321和5322地址都做了添加。  </li>
+<li>通讯组+安全组&lt;允许外部用户发送到该组&gt;功能启用。  </li>
+</ol>
+<h1 id="53215322">聊聊5321和5322</h1>
+<p>Internet Engineering Task Force(IETF)创建了两套RFC标准，同时应用到现在的邮件传递，即RFC5321和RFC5322。RFC5321 cover了邮件端到端传输协议，RFC5322 cover了邮件内容的格式，也就是说5321的信息用作邮件路由传递，不直接显示给终端用户，5322的信息会在邮件客户端中直接显示给用户。另外一方面，SPF验证的是5321地址，DKIM验证的是5322地址。对于邮件头内，个人觉得5321就是Return-Path地址，5322是From地址。</p>
+<h1 id="_5">参考链接</h1>
+<p><a href="https://dmarc.org/2016/07/how-many-from-addresses-are-there/">这是链接</a> </p>
               
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../wsuscase/" class="btn btn-neutral" title="WSUS报错0x80244010"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -159,6 +191,8 @@
   <div class="rst-versions" role="note" aria-label="versions">
   <span class="rst-current-version" data-toggle="rst-current-version">
     
+    
+      <span><a href="../wsuscase/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
   </span>
