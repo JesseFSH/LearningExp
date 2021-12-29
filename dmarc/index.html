@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>精简置备和厚置备的区别 - Learning Exp</title>
+  <title>DMARC记录 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "\u7cbe\u7b80\u7f6e\u5907\u548c\u539a\u7f6e\u5907\u7684\u533a\u522b";
-    var mkdocs_page_input_path = "vmware_disk.md";
+    var mkdocs_page_name = "DMARC\u8bb0\u5f55";
+    var mkdocs_page_input_path = "dmarc.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -71,25 +71,29 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">VMware</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../vmware_api/">VMware Python SDK实现克隆虚机</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">精简置备和厚置备的区别</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_2">厚置备</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_3">精简置备</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../vmware_disk/">精简置备和厚置备的区别</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">邮件相关</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../spf/">SPF记录</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dkim/">DKIM记录</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../dmarc/">DMARC记录</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">DMARC记录</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#dmarc">dmarc是什么</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">工作原理</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#dmarc_1">dmarc语法</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#dmarc_2">如何查询dmarc记录+实例分析</a>
+    </li>
+    </ul>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Case</span></p>
@@ -124,11 +128,11 @@
     
       
         
-          <li>VMware &raquo;</li>
+          <li>邮件相关 &raquo;</li>
         
       
     
-    <li>精简置备和厚置备的区别</li>
+    <li>DMARC记录</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -141,26 +145,38 @@
             <div class="section">
               
                 <h1 id="_1">概述</h1>
-<p>起因是这样的，通过RVtools导出的虚拟机信息中，disk in use字段总和与vcenter中看到的磁盘占用量不相等，且差值超过了10T。研究到最后发现是虚机磁盘精简置备的问题。<br />
-<a href="https://www.nakivo.com/blog/thick-and-thin-provisioning-difference/">Thick and Thin Provisioning: What Is the Difference?</a>  </p>
-<h2 id="_2">厚置备</h2>
-<p>当虚拟机磁盘采用厚置备模式，完整的空间会直接分配给虚拟机，被分配出去的空间不能再被其他虚拟机使用了，并且厚置备也分两种模式。  </p>
-<ul>
-<li>厚置备延迟置零（Lazy zeroed disk）  </li>
-</ul>
-<p>这种类型的厚置备磁盘会把完整的空间分配给虚拟机，但是磁盘空间上可能会存在还没有被清零的旧数据。当虚拟机需要往磁盘上写数据的时候，需要先把磁盘清零，再做写操作。从创建时间上来说，Lazy zeroed disk比Eager zeroed disk更快，但是从使用角度来看，Eager zeroed disk读写性能会比Eager zeroed disk差一点，因为它需要先做清零的动作。</p>
-<ul>
-<li>厚置备置零（Eager zeroed disk）  </li>
-</ul>
-<p>这种类型的厚置备磁盘会把完整的空间分配给虚拟机，并且会直接把磁盘上的旧数据清楚干净，相对Lazy zeroed disk，创建起来会慢一些但是performance会更好。  </p>
-<p><img alt="Thick" src="../img/thick-provisioning.jpg" /></p>
-<h2 id="_3">精简置备</h2>
-<p>就是俗称的超分配，在虚机需要空间的时候再去增长空间。因为可以超分配空间，且磁盘上占据空间为实际数据落盘空间，所以对于想节省存储空间来说这个模式很好用。性能上来说会比任意一种厚置备都差。<br />
-<img alt="Thin" src="../img/thin-provisioning.jpg" /></p>
-<p>当你从精简置备的虚机上删除数据的时候，硬盘上的数据并没有被删除，只是删除了指向实际数据的index，所以通过RVtools导出的disk in use会比较大，因为磁盘上的数据尚未删除，但是这部分磁盘已经被datastore标记为free了，是可分配出去的磁盘，所以从vcenter上看到datastore的数据已经被释放了。</p>
-<p><img alt="delete" src="../img/operating-system.jpg" />  </p>
-<p>对于精简置备来说，虽然可以超分配，但是超分配也容易带来问题，举个例子，你有一块20G的存储，和三台虚机，每台虚机以精简置备的方式分配了10G的空间，当20G的存储被写满时，这三台精简置备的虚机都会挂掉，如果想要恢复那必须将机器迁移到其他存储上才行。所以最佳实践来说vcenter虚机需要和其他业务虚机放在分开的存储上，万一业务存储挂了，那vcenter不受影响，可以继续登录并管理虚机集群。  </p>
-<p>另外，精简置备的机器可以在虚机上删除文件后，将不使用的磁盘部分shrink出来，具体方法可以参考上文的链接，个人觉得对数据有风险，所以没有操作过。  </p>
+<p>此文章旨在把DMARC记录讲清楚，并且加深自己对这方面的理解和印象，学习过程中参考了以下文档：<br />
+<a href="https://dmarc.org/overview/">dmarc官网</a><br />
+<a href="https://www.dmarcly.com/blog/what-are-dmarc-tags-dmarc-tags-explained">dmarc记录tag explanation</a>  </p>
+<h2 id="dmarc">dmarc是什么</h2>
+<p>DMARC (Domain-based Message Authentication, Reporting, and Conformance) 是一个以部署SPF和DKIM为前提条件的防护策略。一般来说，部署了DMARC策略代表发件人已经完成了部署SPF和DKIM，DMARC可以告诉收件人，当spf记录和dkim验证失败的情况下，以什么方式处理。</p>
+<h2 id="_2">工作原理</h2>
+<p>dmarc工作流一图流！可以看到DMARC policy框内包含了spf记录和dkim的验证。  </p>
+<p><img alt="spf" src="../img/dmarc_flow.jpg" /></p>
+<p>dmarc记录长这个样子：<br />
+<code>v=DMARC1; p=reject; rua=mailto:5b06a2badd9f1@report.com; ruf=mailto:5b06a2badd9f1@report.com; sp=none; fo=0;</code></p>
+<h2 id="dmarc_1">dmarc语法</h2>
+<p>dmarc报告分析解读应该是一个商业方案，直接分析dmarc报告应该是个很困难的事情，我没办法直接看到dmarc报告，所以只能猜测了。下面我直接把tag语法描述贴了过来。
+As you can see above, the above DMARC record has multiple components called DMARC tags separated by semicolons: v, p, rua, ruf, sp, and fo. Each tag has a value which defines a certain aspect of DMARC.</p>
+<p>The following DMARC tags are available:</p>
+<p>v is the DMARC version; it's always DMARC1;<br />
+p is the DMARC policy; it can be one of: none, quarantine, and reject, corresponding to the 3 main modes of DMARC;<br />
+rua specifies the URI of the mailbox to receive DMARC aggregate reports. It's required to request for DMARC aggregate reports;<br />
+ruf specifies the URI of the mailbox to receive DMARC failure/forensic reports. It's required to request for DMARC failure/forensic reports;<br />
+adkim (optional, default is "r".) specifies the DKIM Identidier Alignment mode. It can be either of:
+r: relaxed mode<br />
+s: strict mode<br />
+aspf (optional, default is "r".) specifies the SPF Identidier Alignment mode. It can be either of:
+r: relaxed mode<br />
+s: strict mode<br />
+fo (optional, default is "0") specifies failure/forensic reporting options. This tag is ignored if the ruf tag is not defined. The value of this tag is a colon-separated list of characters from '0', '1', 'd', and 's':  </p>
+<p>0: geneate a DMARC failure/forensic report if both SPF and DKIM fail to produce an aligned pass result;<br />
+1: geneate a DMARC failure/forensic report if either SPF or DKIM produces a result other than aligned pass;<br />
+d: geneate a DKIM failure report if the email's DKIM signature fails validation, regardless of the alignment;<br />
+s: geneate a SPF failure report if the email fails SPF evaluation, regardless of the alignment.</p>
+<h2 id="dmarc_2">如何查询dmarc记录+实例分析</h2>
+<p>nslookup _dmarc.domain txt<br />
+dig _dmarc.domain txt</p>
               
             </div>
           </div>
@@ -168,10 +184,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../spf/" class="btn btn-neutral float-right" title="SPF记录">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../smbv1/" class="btn btn-neutral float-right" title="Disable SMBv1引发事件">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../vmware_api/" class="btn btn-neutral" title="VMware Python SDK实现克隆虚机"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../dkim/" class="btn btn-neutral" title="DKIM记录"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -197,10 +213,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../vmware_api/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../dkim/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../spf/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../smbv1/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
