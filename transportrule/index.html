@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>用dd命令测试磁盘IO - Learning Exp</title>
+  <title>传输规则延迟生效 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "\u7528dd\u547d\u4ee4\u6d4b\u8bd5\u78c1\u76d8IO";
-    var mkdocs_page_input_path = "dd.md";
+    var mkdocs_page_name = "\u4f20\u8f93\u89c4\u5219\u5ef6\u8fdf\u751f\u6548";
+    var mkdocs_page_input_path = "transportrule.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -60,14 +60,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Linux</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../dns/">DNS基础</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">用dd命令测试磁盘IO</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_2">使用方法</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../dd/">用dd命令测试磁盘IO</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../haproxy/">初窥haproxy</a>
                     </li>
@@ -91,7 +87,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Case</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../smbv1/">Disable SMBv1引发事件</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../mail_delay/">内部邮件delay事件</a>
@@ -102,7 +98,9 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../mail_case02/">邮件头5322和5321from地址不同</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../transportrule/">传输规则延迟生效</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">传输规则延迟生效</a>
+    <ul class="current">
+    </ul>
                     </li>
                 </ul>
       </div>
@@ -126,11 +124,11 @@
     
       
         
-          <li>Linux &raquo;</li>
+          <li>Case &raquo;</li>
         
       
     
-    <li>用dd命令测试磁盘IO</li>
+    <li>传输规则延迟生效</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -142,11 +140,15 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="_1">概述</h1>
-<p>dd是linux中一个复制数据的命令，使用的时候要小心，不当的使用很容易造成数据丢失。这里讨论一下用dd来查看磁盘的读写性能。</p>
-<h2 id="_2">使用方法</h2>
-<p>操作系统一般不会直接从硬盘中读写数据，暂时不在使用的内存会被用来缓存读写信息，所以当使用dd来测试磁盘读写性能时，需要用<code>oflag</code>参数来规避缓存的影响，可以把<code>oflag</code>的值设定为<code>direct</code><br />
-为了计算磁盘性能，可以从<code>/dev/zero</code>读数据，写到一块空的磁盘上，比如<code>/dev/sda</code>或者一块磁盘分区，比如<code>/dev/sda2</code>，输出文件也可以是一个普通的文件<code>/root/testfile</code>。命令：<code>dd if=/dev/zero of=/root/testfile bs=1G count=1 oflag=direct</code>，命令中，数据块大小为1G，数量为1，Linux系统会需要1G的空内存来处理这个写的过程，如果内存不够的话，可以把数据块调小，数量调大来实现。  </p>
+                <h1 id="202203">2022.03 遇到问题</h1>
+<p>前后一共遇到两次问题。第一次新增了Transport Rule，30分钟后，仅有部分预计生效的邮件流hit到了传输规则。第二次修改已有传输规则的scope范围，传输规则作用于某一通讯组成员，增加成员超过30分钟，新成员仍未生效。</p>
+<h1 id="_1">解决过程</h1>
+<p>前后开了两个case给微软官方，第一次Get-MessageTrackingLog + Get-TransportRule给微软，发现所有未生效的邮件流都从同一台邮件服务器路由经过，且在处理传输规则的eventid中，未见到该台邮件服务器处理相应的传输规则。最后结论，建议修改传输规则后，等待30分钟以上使其生效。</p>
+<p><img alt="transportrule" src="../img/transportrule1.png" /></p>
+<p><a href="https://docs.microsoft.com/en-us/exchange/test-transport-rules-exchange-2013-help#:~:text=%20Use%20a%20test%20mode%20with%20an%20incident,select%20Add%20action.%206%20Select%20Save.%20See%20More.">Test Transport Rule</a>  </p>
+<p>第二次和工程师描述了情况后，直接给出了结论。Exchange服务器会缓存通讯组的数据，来防止Exchange服务器频繁请求AD服务器来查询组的信息，默认情况下这部分缓存每四小时会过期，更新组成员后，需要等到缓存过期后才会刷新生效。如果想要做手动刷新，需要重启Exchange Transport Service，重启此服务会影响该Exchange Server的邮件流传输，所以个人觉得没必要为了传输规则的生效做服务重启。而事实上确实在等待超过2小时后，传输规则生效了。问题解决。</p>
+<p><img alt="transportrule" src="../img/transportrule2.png" /></p>
+<p><a href="https://docs.microsoft.com/en-us/Exchange/policy-and-compliance/mail-flow-rules/mail-flow-rules?view=exchserver-2019">Mail flow rules in Exchange Server</a></p>
               
             </div>
           </div>
@@ -154,10 +156,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../haproxy/" class="btn btn-neutral float-right" title="初窥haproxy">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href="../dns/" class="btn btn-neutral" title="DNS基础"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../mail_case02/" class="btn btn-neutral" title="邮件头5322和5321from地址不同"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -183,10 +183,8 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../dns/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../mail_case02/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../haproxy/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
