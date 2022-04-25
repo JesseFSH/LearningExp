@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>用dd命令测试磁盘IO - Learning Exp</title>
+  <title>传输规则事件 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "\u7528dd\u547d\u4ee4\u6d4b\u8bd5\u78c1\u76d8IO";
-    var mkdocs_page_input_path = "dd.md";
+    var mkdocs_page_name = "\u4f20\u8f93\u89c4\u5219\u4e8b\u4ef6";
+    var mkdocs_page_input_path = "transportrule02.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -60,14 +60,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Linux</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../dns/">DNS基础</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">用dd命令测试磁盘IO</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_2">使用方法</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../dd/">用dd命令测试磁盘IO</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../haproxy/">初窥haproxy</a>
                     </li>
@@ -91,7 +87,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Case</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../smbv1/">Disable SMBv1引发事件</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../mail_delay/">内部邮件delay事件</a>
@@ -104,7 +100,9 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../transportrule/">传输规则延迟生效</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../transportrule02/">传输规则事件</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">传输规则事件</a>
+    <ul class="current">
+    </ul>
                     </li>
                 </ul>
       </div>
@@ -128,11 +126,11 @@
     
       
         
-          <li>Linux &raquo;</li>
+          <li>Case &raquo;</li>
         
       
     
-    <li>用dd命令测试磁盘IO</li>
+    <li>传输规则事件</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -144,11 +142,14 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="_1">概述</h1>
-<p>dd是linux中一个复制数据的命令，使用的时候要小心，不当的使用很容易造成数据丢失。这里讨论一下用dd来查看磁盘的读写性能。</p>
-<h2 id="_2">使用方法</h2>
-<p>操作系统一般不会直接从硬盘中读写数据，暂时不在使用的内存会被用来缓存读写信息，所以当使用dd来测试磁盘读写性能时，需要用<code>oflag</code>参数来规避缓存的影响，可以把<code>oflag</code>的值设定为<code>direct</code><br />
-为了计算磁盘性能，可以从<code>/dev/zero</code>读数据，写到一块空的磁盘上，比如<code>/dev/sda</code>或者一块磁盘分区，比如<code>/dev/sda2</code>，输出文件也可以是一个普通的文件<code>/root/testfile</code>。命令：<code>dd if=/dev/zero of=/root/testfile bs=1G count=1 oflag=direct</code>，命令中，数据块大小为1G，数量为1，Linux系统会需要1G的空内存来处理这个写的过程，如果内存不够的话，可以把数据块调小，数量调大来实现。  </p>
+                <h1 id="202204">2022.04 遇到问题，现象如下</h1>
+<p>最近遇到两起事件，都和传输规则有关，归纳总结一下。<br />
+事件一：用户A代表部门R发送邮件到部门I所有成员，存在一条已有传输规则：如果部门R成员发送邮件到部门I成员，则被block，发件人地址匹配标头header。事实上，该邮件未被block。<br />
+事件二：用户S转发一封会议邀请给公司外部邮箱，存在一条已有传输规则：如果用户属于rule组，收件人是外部邮箱，那么邮件会被插入一条tag，value为xxx，发件人地址匹配标头header。事实上，该邮件未被插入tag: xxx。</p>
+<h1 id="_1">问题原因</h1>
+<p>对于事件一，用户A代表部门R发送邮件，邮件头内From地址为部门R邮箱地址，Sender和Return-Path地址为用户A邮箱地址。传输规则发件人地址匹配标头header（即From），所以未触发规则。同样对于事件二，用户S转发一封会议邀请，表现形式同样为代表会议发起人发送邮件，传输规则的发件人地址匹配也为标头header，会议发起人不属于rule组，不能触发规则。</p>
+<h1 id="_2">解决方法</h1>
+<p>将传输规则发件人地址匹配修改为标头或信封，即header（From） +Envelope (Return-path)。</p>
               
             </div>
           </div>
@@ -156,10 +157,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../haproxy/" class="btn btn-neutral float-right" title="初窥haproxy">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href="../dns/" class="btn btn-neutral" title="DNS基础"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../transportrule/" class="btn btn-neutral" title="传输规则延迟生效"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -185,10 +184,8 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../dns/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../transportrule/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../haproxy/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
