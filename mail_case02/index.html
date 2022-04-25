@@ -98,7 +98,7 @@
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">邮件头5322和5321from地址不同</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_2">现象外部</a>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">现象</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#_3">转折点</a>
     </li>
@@ -147,8 +147,8 @@
             <div class="section">
               
                 <h1 id="_1">事件经过</h1>
-<h3 id="_2">现象外部</h3>
-<p>用户使用工具发邮件到公司内部一个Exchange通讯组，邮件收不到。该通讯组成员嵌套了一个安全组，安全组内包含了实际的收件人。当时将通讯组+安全组&lt;允许外部用户发送到该组&gt;功能启用，并且调整&lt;可发送到该组&gt;的ACL清单，添加发件人地址aaa.bbb@contoso.com。仍无法收到邮件，邮件网关不存在记录。</p>
+<h3 id="_2">现象</h3>
+<p>外部用户使用工具发邮件到公司内部一个Exchange通讯组，邮件收不到。该通讯组成员嵌套了一个安全组，安全组内包含了实际的收件人。当时将通讯组+安全组&lt;允许外部用户发送到该组&gt;功能启用，并且调整&lt;可发送到该组&gt;的ACL清单，添加发件人地址aaa.bbb@contoso.com。仍无法收到邮件，邮件网关不存在记录。</p>
 <h3 id="_3">转折点</h3>
 <p>通过global用户提供的收件邮件头发现，邮件头内5321和5322From地址不同。将5321地址aaabbb@contoso.com加入到&lt;可发送到该组&gt;的ACL清单内后，邮件正常收到了。</p>
 <h3 id="_4">解决方案</h3>
