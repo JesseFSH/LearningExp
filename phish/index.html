@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>钓鱼邮件时间 - Learning Exp</title>
+  <title>钓鱼邮件事件 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "\u9493\u9c7c\u90ae\u4ef6\u65f6\u95f4";
+    var mkdocs_page_name = "\u9493\u9c7c\u90ae\u4ef6\u4e8b\u4ef6";
     var mkdocs_page_input_path = "phish.md";
     var mkdocs_page_url = null;
   </script>
@@ -102,7 +102,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../transportrule02/">传输规则事件</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">钓鱼邮件时间</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">钓鱼邮件事件</a>
     <ul class="current">
     </ul>
                     </li>
@@ -132,7 +132,7 @@
         
       
     
-    <li>钓鱼邮件时间</li>
+    <li>钓鱼邮件事件</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -147,14 +147,13 @@
                 <h1 id="202401">2024.01 遇到问题</h1>
 <p>遇到一封钓鱼邮件，邮件头的From字段被篡改为公司邮件域名结尾的邮箱地址，并且不存在第三方代发。outlook设置的判断邮件是否来自外部，将其判断为内部邮件。发件人真实的发件域名注册了spf记录，因此spf check结果显示为pass，但无dkim，dmarc结果为failed。针对这一现象，引发了一些思考。</p>
 <h1 id="_1">尝试复现钓鱼邮件</h1>
-<p>Swaks是一个SMTP测试工具，可以用来模拟发送钓鱼邮件。swaks不能在Windows上运行，我在官方网站下载了tar包，直接解压在一台RHEL 8.5上即可运行。需要注意swaks用perl编写，对perl包有依赖。首先准备将本地RHEL作为邮件服务器，发送钓鱼邮件。安装了sendmail服务并<code>systemctl start sendmail</code>，随后</p>
-<p><code>Set-ServerComponentState &lt;ServerName&gt; -Component HubTransport -State Draining -Requester Maintenance</code></p>
-<p>前后开了两个case给微软官方，第一次Get-MessageTrackingLog + Get-TransportRule给微软，发现所有未生效的邮件流都从同一台邮件服务器路由经过，且在处理传输规则的eventid中，未见到该台邮件服务器处理相应的传输规则。最后结论，建议修改传输规则后，等待30分钟以上使其生效。</p>
-<p><img alt="transportrule" src="../img/transportrule1.png" /></p>
-<p><a href="https://docs.microsoft.com/en-us/exchange/test-transport-rules-exchange-2013-help#:~:text=%20Use%20a%20test%20mode%20with%20an%20incident,select%20Add%20action.%206%20Select%20Save.%20See%20More.">Test Transport Rule</a>  </p>
-<p>第二次和工程师描述了情况后，直接给出了结论。Exchange服务器会缓存通讯组的数据，来防止Exchange服务器频繁请求AD服务器来查询组的信息，默认情况下这部分缓存每四小时会过期，更新组成员后，需要等到缓存过期后才会刷新生效。如果想要做手动刷新，需要重启Exchange Transport Service，重启此服务会影响该Exchange Server的邮件流传输，所以个人觉得没必要为了传输规则的生效做服务重启。而事实上确实在等待超过2小时后，传输规则生效了。问题解决。</p>
-<p><img alt="transportrule" src="../img/transportrule2.png" /></p>
-<p><a href="https://docs.microsoft.com/en-us/Exchange/policy-and-compliance/mail-flow-rules/mail-flow-rules?view=exchserver-2019">Mail flow rules in Exchange Server</a></p>
+<p>Swaks是一个SMTP测试工具，可以用来模拟发送钓鱼邮件。swaks不能在Windows上运行，我在官方网站下载了tar包，直接解压在一台RHEL 8.5上即可运行。需要注意swaks用perl编写，对perl包有依赖。首先准备将本地RHEL作为邮件服务器，发送钓鱼邮件。安装了sendmail服务并<code>systemctl start sendmail</code>，随后<code>swaks --to &lt;recipient_email_addr&gt; --from &lt;fake_email_addr&gt; --header "Subject: case 20240202"</code>，收件地址分别发送到本地网关和O365网关。发送到本地网关的钓鱼邮件成功进站，因为我没有dns和电子签名等准备，spf和dkim failed。收件人这一侧outlook规则判断钓鱼邮件为内部，显示发件人为fake_email_addr，无代发显示。但是发送到O365网关的邮件显示<code>blocked using Spamhaus</code>，从结果来看，O365网关安全性更高。有没有办法发送到O365网关进站呢。</p>
+<p>第二步复现测试，目标是把钓鱼邮件发进O365网关。想要发进O365网关，首先要解决<code>blocked using Spamhaus</code>，想到relay公网邮件服务器来做邮件发送，swaks有参数<code>--server</code>，可以指定邮件服务器。登录163邮箱后，打开SMTP服务。relay 163邮件服务，来发送到O365网关<code>swaks --to &lt;recipient_email_addr&gt; --from &lt;fake_email_addr&gt; --header "Subject: testcase 20240202" --server smtp.163.com -p 25 -au &lt;163_email_addr&gt; -ap &lt;token&gt;</code>收到报错如下图。</p>
+<p><img alt="phishing" src="../img/phish1.png" /></p>
+<p>Mail from和authorized user必须保持一致，这应该是163邮件服务出站前的检测，有没有办法绕过此检查呢。<code>swaks --help</code>发现参数<code>--header</code>，其说明为<code>These options allow a way to change headers that already exist in the DATA.</code>，即通过该参数可以改写邮件DATA内的数据。通过<code>--from &lt;authorized_email_addr&gt; --header "From: &lt;fake_email_addr&gt;"</code>来改写from中的真实地址。<code>swaks --to &lt;recipient_email_addr&gt; --from &lt;163_email_addr&gt; --header "Subject: testcase 20240202\nFrom: fake_sender &lt;fake_email_addr&gt;" --server smtp.163.com -p 25 -au &lt;163_email_addr&gt; -ap &lt;token&gt;</code> 这么修改确实发进来了，用户端outlook显示<authorized_email_addr>代表<fake_email_addr>发送邮件，outlook规则判断其为外部邮件，spf和dkim均pass，为163.com的。很有迷惑性。有没有办法把'代发'显示去掉呢？检查这一次的钓鱼邮件邮件头，发现from已经被改为fake_email_addr，但是存在sender，地址为163_email_addr，将sender写在--header参数内看看能否将其改写。<code>swaks --to &lt;recipient_email_addr&gt; --from &lt;163_email_addr&gt; --header "Subject: testcase 20240202\nFrom: fake_sender &lt;fake_email_addr&gt;\nSender: &lt;fake_email_addr&gt;" --server smtp.163.com -p 25 -au &lt;163_email_addr&gt; -ap &lt;token&gt;</code>尝试，但是失败了，估计是邮件出站前，会被smtp服务器改为真实地址。</p>
+<h1 id="_2">如何防范</h1>
+<p><a href="https://learn.microsoft.com/en-us/microsoft-365/security/office-365-security/message-headers-eop-mdo?view=o365-worldwide">Anti-spam message headers in Microsoft 365</a><br />
+其实O365在这方面比我们自己的本地网关做的好多了，通过邮件头检查和与其他同事讨论，微软会给进站邮件打一些标签在邮件头内，这些标签显示了EOP对该邮件的分析结果。EOP应该有策略，可以直接针对分析结果，对钓鱼邮件进一步处理，但是我们没有EOP权限，怎么在本地网关做一些事情呢？我的想法是扫描进站邮件的header，对X-Forefront-Antispam-Report这个header的值做判断，其中<code>SCL:5</code>，<code>SCL:6</code>，<code>SCL:7</code>，<code>SCL:8</code>，<code>SCL:9</code>，<code>SFV:SPM</code>，<code>CAT:OSPM</code>对这些field做或的判断，如果命中，则隔离邮件。尚未实施，后续更新结果。</p>
               
             </div>
           </div>
