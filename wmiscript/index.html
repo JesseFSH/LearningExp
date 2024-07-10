@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>通过远程WMI监控和访问主机信息 - Learning Exp</title>
+  <title>Wmiscript - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "\u901a\u8fc7\u8fdc\u7a0bWMI\u76d1\u63a7\u548c\u8bbf\u95ee\u4e3b\u673a\u4fe1\u606f";
-    var mkdocs_page_input_path = "wmi.md";
+    var mkdocs_page_name = "Wmiscript";
+    var mkdocs_page_input_path = "wmiscript.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -51,16 +51,14 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Microsoft</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../exchange/">Exchange 2013 Cu补丁升级</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../ntpinad/">AD域内的时间同步</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../windows_auth/">Windows认证</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">通过远程WMI监控和访问主机信息</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../wmi/">通过远程WMI监控和访问主机信息</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Linux</span></p>
@@ -129,12 +127,8 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
-        
-          <li>Microsoft &raquo;</li>
-        
-      
     
-    <li>通过远程WMI监控和访问主机信息</li>
+    <li>Wmiscript</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -146,104 +140,53 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="_1">概述</h1>
-<p>因为监控系统不给力，想要自己写一个监控windows server的脚本，并且定期通过邮件来提醒我哪些主机有问题。</p>
-<p>参考文档：<br />
-<a href="https://learn.microsoft.com/en-us/powershell/module/cimcmdlets/get-ciminstance?view=powershell-7.4">Get-CimInstance命令文档</a><br />
-<a href="https://learn.microsoft.com/en-us/windows/win32/wmisdk/access-to-wmi-namespaces">WMI namespace权限</a><br />
-<a href="https://learn.microsoft.com/en-us/windows-server/security/group-managed-service-accounts/getting-started-with-group-managed-service-accounts">GMSA</a></p>
-<h1 id="_2">遇到的问题</h1>
-<ul>
-<li>如何远程拿到系统监控参数
-受《powershell实战》一书启发，核心逻辑是通过Get-ADComputer遍历windows服务器所在的AD OU，通过Get-CimInstance拿到主机的性能参数，所有结果以HTML的形式保存，并通过邮件发送给我。HTML中，以表格形式呈现，可以通过对参数的判断，可以做标黄标红。性能参数包括但不限于：</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>性能参数</th>
-<th>来源WMI Class</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>OS版本</td>
-<td>Win32_OperatngSystem</td>
-</tr>
-<tr>
-<td>IP地址</td>
-<td>Win32_NetworkAdapterConfiguration</td>
-</tr>
-<tr>
-<td>pending reboot</td>
-<td>不从WMI class来，通过Invoke-Command远程执行Test-Path命令来验证相应注册表键值是否存在，</td>
-</tr>
-<tr>
-<td></td>
-<td>注册表键值：HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired</td>
-</tr>
-<tr>
-<td>uptime</td>
-<td>Win32_OperatngSystem中有LastBootTime，和当前时间计算得到</td>
-</tr>
-<tr>
-<td>磁盘信息（容量、磁盘读写IO、读写队列）</td>
-<td>Win32_LogicalDisk、Win32_PerfFormattedData_PerfDisk_LogicalDisk</td>
-</tr>
-<tr>
-<td>内存</td>
-<td>Win32_PhysicalMemory、Win32_OperatngSystem</td>
-</tr>
-<tr>
-<td>cpu</td>
-<td>Win32_PerfFormattedData_PerfOS_Processor、CIM_Processor</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>
-<p>怎么通过HTML呈现监控信息<br />
-参考了CSS Exchange Health Checker的HTML format。</p>
-</li>
-<li>
-<p>如何用GMSA运行该脚本<br />
-为了避开AD用户账户的password policy（定期修改密码），我打算使用GMSA来运行脚本，需要解决怎么以GMSA来运行定时任务。</p>
-<p>(1) 先要在AD DS上检查KDS root key<br />
-<code>Get-KdsRootKey</code><br />
-(2) 若不存在，我们需要创建KDS root key<br />
-<code>Add-KdsRootKey -EffectiveImmediately</code><br />
-(3) 创建好之后，再次确认KDS root key创建成功<br />
-<code>Get-KdsRootKey</code><br />
-(4) 使用以下命令创建GMSA<br />
-<code>New-ADService -name gMSA_taskschd -DNSHostName FileServer.contoso.com PrincipalsAllowedToRetrieveManagedPassword  "gMSA_SVR_group"</code><br />
-(5) 在成员服务器上，为了允许账户运行脚本，我们需要将账户添加到“log on as a batch job”用户权限分配中。可以通过组策略或者本地策略来完成。路径<code>Computer Configuration-&gt;Windows Settings-&gt;Security Settings-&gt;Local Policies-&gt;User Rights Assgin-&gt;Log on as a batch job</code><br />
-(6) 在成员服务器上，创建定时任务，此步骤无法用GUI完成。<br />
-<code>$arg = "-ExecutionPolicy Bypass -NoProfile -File C:\temo\test.ps1"</code><br />
-<code>$taction = New-ScheduledTaskAction -Execute C:\Windows\System32\WindowsPowerShel\v1.0\powershell.exe -Argument $arg</code><br />
-<code>$ttime = New-ScheduledTaskTrigger -At "12:00" -Once</code><br />
-<code>$tprinc = New-ScheduledTaskPrincipal -UserID contoso\gMSA_taskschd$ -LogonType Password</code><br />
-<code>Register-ScheduledTask gMSA_Test_Task -Action $taction -Trigger $ttime -Principal $tprinc</code>  </p>
-</li>
-<li>
-<p>需要什么权限<br />
-分为远程协议和WMI自身权限，首先远程协议使用的WSMan（WinRM），需要将域账号添加到远程主机的本地Remote Management Users组里，具体实现方式可以通过GPO，<code>Computer Configuration-&gt;Policies-&gt;Windows Settings-&gt;Security Settings-&gt;Restrict Groups</code>，在空白处Add Group，选择Remote Management Users，接着选择需要添加到本地Remote Management Users，将需要添加的账号放到其中，可以将一个域用户组加入到里面，后续只要维护这个组的member即可。<br />
-我们的usecase用到的命名空间是root\CIMV2，所以需要在被远程的机器本地CIMV2 namespace添加对应域账号的权限，权限为WBEM_METHOD_EXECUTE, WBEM_ENABLE, WBEM_REMOTE_ACCESS。又因为要查询performance counter需要额外权限，需要加入到远程机器的本地Performance Monitor Users/Performance Log Users组中，添加方式与Remote Management Users相同。<br />
-回头来说如何设置CIMV2 namespace的权限。手工添加，mmc.msc-&gt;wmimanagement，右键securities添加相应权限。如果需要批量添加，考虑使用ps脚本+组策略推送运行脚本任务来达成目的。
-<a href="../wmiscript/">添加wmi namespace权限脚本</a></p>
-</li>
-</ul>
+                <p>$namespace = "root\cimv2"<br />
+$account = "<domain_name>\wmigroup" # Change domain group<br />
+if ($account.Contains('\')) {
+    $domainaccount = $account.Split('\')
+    $domain = $domainaccount[0]
+    $accountname = $domainaccount[1]
+}</p>
+<p># Get Domain Account SID<br />
+$getparams = @{Class="Win32_Account";Filter="Domain='$domain' and Name='$accountname'"}
+$win32account = Get-WmiObject @getparams</p>
+<p>if ($null -eq $win32account) {
+    throw "Account was not found: $account"
+}</p>
+<p># Set WMI Permission<br />
+# Need the permission of enable account, execute method, remote access. The value of all these permission is 1, 2, 0x20.<br />
+# https://learn.microsoft.com/en-us/windows/win32/api/wbemcli/ne-wbemcli-wbem_security_flags<br />
+$WBEM_ENABLE = 1
+$WBEM_METHOD_EXECUTE = 2
+$WBEM_REMOTE_ACCESS = 0x20</p>
+<p>$accessMask = 0
+$accessMask = $WBEM_ENABLE + $WBEM_METHOD_EXECUTE + $WBEM_REMOTE_ACCESS</p>
+<p>$invokeparams = @{Namespace=$namespace;Path="__systemsecurity=@"}</p>
+<p>$output = Invoke-WmiMethod @invokeparams -Name GetSecurityDescriptor
+if ($output.ReturnValue -ne 0) {
+    throw "GetSecurityDescriptor failed: $(output.ReturnValue)"
+    return
+}</p>
+<p>$acl = $output.Descriptor</p>
+<p>$ace = (New-Object System.Management.ManagementClass("win32_Ace")).CreateInstance()
+$ace.AccessMask = $accessMask
+$ace.AceFlags = 0</p>
+<p>$trustee = (New-Object System.Management.ManagementClass("win32_Trustee")).CreateInstance()
+$trustee.SidString = $win32account.Sid
+$ace.Trustee = $trustee</p>
+<p>$ACCESS_ALLOWED_ACE_TYPE = 0x0</p>
+<p>$ace.AceType = $ACCESS_ALLOWED_ACE_TYPE
+$ace.DACL += $ace.psobject.immediateBaseObject</p>
+<p>$setparams = @{Name="SetSecurityDescriptor";ArgumentList=$acl.psobject.immediateBaseObject} + $invokeParams</p>
+<p>$output = Invoke-WmiMethod @setparams
+if ($out.ReturnValue -ne 0) {
+    throw "SetSecurityDescriptor failed: $(output.ReturnValue)"
+    return
+}</p>
               
             </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../dns/" class="btn btn-neutral float-right" title="DNS基础">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../windows_auth/" class="btn btn-neutral" title="Windows认证"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
@@ -267,10 +210,6 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../windows_auth/" style="color: #fcfcfc">&laquo; Previous</a></span>
-    
-    
-      <span><a href="../dns/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
