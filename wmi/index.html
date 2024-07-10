@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>DKIM记录 - Learning Exp</title>
+  <title>通过远程WMI监控和访问主机信息 - Learning Exp</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "DKIM\u8bb0\u5f55";
-    var mkdocs_page_input_path = "dkim.md";
+    var mkdocs_page_name = "\u901a\u8fc7\u8fdc\u7a0bWMI\u76d1\u63a7\u548c\u8bbf\u95ee\u4e3b\u673a\u4fe1\u606f";
+    var mkdocs_page_input_path = "wmi.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -51,14 +51,14 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Microsoft</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../exchange/">Exchange 2013 Cu补丁升级</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../ntpinad/">AD域内的时间同步</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../windows_auth/">Windows认证</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../wmi/">通过远程WMI监控和访问主机信息</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">通过远程WMI监控和访问主机信息</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Linux</span></p>
@@ -80,18 +80,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">邮件相关</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../spf/">SPF记录</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">DKIM记录</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#dkim">dkim是什么</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_2">工作原理</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#dkim_1">如何查询dkim记录</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../dkim/">DKIM记录</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dmarc/">DMARC记录</a>
                     </li>
@@ -136,11 +128,11 @@
     
       
         
-          <li>邮件相关 &raquo;</li>
+          <li>Microsoft &raquo;</li>
         
       
     
-    <li>DKIM记录</li>
+    <li>通过远程WMI监控和访问主机信息</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -152,35 +144,7 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="_1">概述</h1>
-<p>此文章旨在把DKIM记录讲清楚，并且加深自己对这方面的理解和印象，学习过程中参考了以下文档：<br />
-<a href="https://www.docusign.com/how-it-works/electronic-signature/digital-signature/digital-signature-faq">数字签名工作原理</a><br />
-<a href="https://securitytrails.com/blog/what-is-dkim">DKIM工作原理</a><br />
-<a href="https://www.cisco.com/c/en/us/support/docs/security/secure-email-gateway/217073-how-to-use-dig-nslookup-to-find-spf-dki.html">how to use nslookup/dig to lookup dkim, dmarc, spf record</a></p>
-<h2 id="dkim">dkim是什么</h2>
-<p>DKIM (DomainKeys Identified Mail) 是一种邮件验证机制，收件人验证发件人的邮件是否被篡改。</p>
-<h2 id="_2">工作原理</h2>
-<p>由MTA(Mail Transfer Agent)，即邮件网关生成一对公私钥对，私钥存放在MTA，用作邮件外发时，在邮件头内生成数字签名。DKIM的数字签名长这个样子：<br />
-<code>DKIM-Signature a=rsa-sha1; q=dns;</code><br />
-<code>d=example.com;</code><br />
-<code>i=user@eng.example.com;</code><br />
-<code>s=jun2005.eng; c=relaxed/simple;</code><br />
-<code>t=1117574938; x=1118006938;</code><br />
-<code>h=from:to:subject:date;</code><br />
-<code>b=dzdVyOfAKCdLXdJOc9G2q8LoXSlEniSb</code><br />
-<code>av+yuU4zGeeruD00lszZVoG4ZHRNiYzR</code><br />
-公钥则以TXT记录的形式被添加到邮件域名zone内，DKIM的TXT记录长这个样子：<br />
-<code>example._domainkey.itverx.com.ve.86400 IN TXT "v=DKIM1\; g=*\; k=rsa\; p=MIGfM</code><br />
-<code>A0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqFGebZAOHfSGy9CWtA4Uads0zaXAy8TWtW9uIFbyIkFNC67fQVFVjsxlmcEg1oFNp2CrTYF1YNh2gB144c+XY5GVM2fGEYAKx3iBxajWTzsx3SvpQtAZ2Bvf2mV+Te+JtlbpxVuiuiW2Alqwhk1ytTWspf/S3bM73XssV+/mh9wIDAQAB"</code><br />
-当用户收到邮件时，收件方通过DNS记录查询拿到公钥，对数字签名做解密，得到hash值。再对邮件内容以双方协商的算法计算出hash值，两个hash值比对，如果相同则邮件内容未被篡改。  </p>
-<p>数字签名工作机制一图流：
-<img alt="spf" src="../img/digital_signature.png" /></p>
-<h2 id="dkim_1">如何查询dkim记录</h2>
-<p>dkim查询需要一个字符串，叫selector，selector可以在邮件头里找到。</p>
-<p>通过nslookup/dig查询dkim记录：<br />
-<code>nslookup selector._domainkey.domain txt</code><br />
-<code>dig selector._domainkey.domain txt</code>  </p>
-<p>也可以通过在线web工具查询</p>
+                <p>1</p>
               
             </div>
           </div>
@@ -188,10 +152,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../dmarc/" class="btn btn-neutral float-right" title="DMARC记录">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../dns/" class="btn btn-neutral float-right" title="DNS基础">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../spf/" class="btn btn-neutral" title="SPF记录"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../windows_auth/" class="btn btn-neutral" title="Windows认证"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -217,10 +181,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../spf/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../windows_auth/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../dmarc/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../dns/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
